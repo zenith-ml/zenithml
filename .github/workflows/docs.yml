@@ -1,0 +1,44 @@
+name: Docs
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+
+  make_html:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        python-version: [3.8]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install Protoc
+      uses: arduino/setup-protoc@v1
+
+    - uses: actions/cache@v2
+      with:
+        path: ${{ env.pythonLocation }}
+        key: ${{ env.pythonLocation }}-${{ hashFiles('setup.py') }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install .
+        python -m pip install --upgrade --upgrade-strategy eager .[dev]
+        python -m pip install --upgrade --upgrade-strategy eager .[docs]
+
+    - name: Build documentation
+      run: |
+        cd docs && make clean && make html SPHINXOPTS="-W"  # Fail on warning.
