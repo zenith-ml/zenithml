@@ -1,5 +1,5 @@
-[![Tests](https://github.com/condorml/condorml/actions/workflows/ci.yml/badge.svg)](https://github.com/condorml/condorml/actions/workflows/ci.yml)
-[![Release Build](https://github.com/condorml/condorml/actions/workflows/build.yml/badge.svg)](https://github.com/condorml/condorml/actions/workflows/build.yml)
+[![Tests](https://github.com/condorml/condorml/actions/workflows/tests.yml/badge.svg)](https://github.com/condorml/condorml/actions/workflows/tests.yml)
+[![Docker](https://github.com/condorml/condorml/actions/workflows/docker.yml/badge.svg)](https://github.com/condorml/condorml/actions/workflows/docker.yml)
 [![Documentation Status](https://readthedocs.org/projects/condorml/badge/?version=latest)](https://condorml.readthedocs.io/en/latest/?badge=latest)
 [![codecov](https://codecov.io/gh/condorml/condorml/branch/main/graph/badge.svg?token=7JQCAEKFRH)](https://codecov.io/gh/condorml/condorml)
 [![PyPI version](https://badge.fury.io/py/condorml.svg)](https://badge.fury.io/py/condorml)
