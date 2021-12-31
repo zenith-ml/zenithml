@@ -35,6 +35,11 @@ ADD docker/jupyter_notebook_config.py /root/.jupyter/jupyter_notebook_config.py
 ADD docker/run_jupyter.sh /run_jupyter.sh
 RUN chmod +x /run_jupyter.sh
 
+WORKDIR $HOME/ml
+ADD . $HOME/ml
+RUN pip install .
+RUN if [[ "$BASE_IMAGE" == *"tensorflow"* ]] ; then pip install .[tf]; else pip install .[torch]; fi
+
 #EXPOSE 8000-8999
 ENTRYPOINT ["/run_jupyter.sh"]
 CMD ["/run_jupyter.sh"]

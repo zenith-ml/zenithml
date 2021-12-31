@@ -30,10 +30,11 @@ test: lint FORCE
 
 clean: FORCE
 	@rm -rf docs/build
-	@rm -r .pytest_cache
-	@rm -r coverage.xml
-	@rm -r .coverage
-	@rm -r condorml.egg-info
+	@rm -rf .pytest_cache
+	@rm -rf coverage.xml
+	@rm -rf .coverage*
+	@rm -rf .mypy_cache*
+	@rm -rf condorml.egg-info
 
 docs: FORCE
 	$(MAKE) -C docs html

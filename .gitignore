@@ -130,3 +130,8 @@ dmypy.json
 
 # PyCharm
 .idea/
+
+# Ray Yamls
+scripts/*.yaml
+!scripts/ray.tf-template.yaml
+!scripts/ray.torch-template.yaml
