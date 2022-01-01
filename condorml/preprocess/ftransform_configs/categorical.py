@@ -5,20 +5,19 @@ import pandas as pd
 from condorml.preprocess.analyze import (
     PandasAnalyzer,
     BQAnalyzer,
+    NVTAnalyzer,
     CategoricalBQAnalyzer,
     WeightedCategoricalBQAnalyzer,
     BucketizedBQAnalyzer,
-)
-from condorml.preprocess.analyze.nvt_analyzer import (
-    NVTColType,
-    NVTAnalyzer,
-    CategoricalNVTAnalyzer,
-    BucketizeNVTAnalyzer,
-)
-from condorml.preprocess.analyze.pandas_analyzer import (
     CategoricalPandasAnalyzer,
     CategoricalListPandasAnalyzer,
     NumericalPandasAnalyzer,
+)
+from condorml.preprocess.base_transformer import (
+    NVTColType,
+    BaseNVTTransformer,
+    CategoricalBaseNVTTransformer,
+    BucketizeBaseNVTTransformer,
 )
 from condorml.preprocess.ftransform_configs.ftransform_config import FTransformConfig
 
@@ -54,8 +53,8 @@ class Categorical(FTransformConfig):
             input_col=self.input_col, default_value=self.default_value, feature=self.name, top_k=self.top_k
         )
 
-    def nvt_analyzer(self) -> NVTAnalyzer:
-        return CategoricalNVTAnalyzer(
+    def base_transformer(self) -> BaseNVTTransformer:
+        return CategoricalBaseNVTTransformer(
             input_col=self.input_col,
             col_type=NVTColType.CAT,
             default_value=self.default_value,
@@ -69,6 +68,11 @@ class Categorical(FTransformConfig):
             top_k=self.top_k,
             export_as_parquet=self.export_as_parquet,
         )
+
+    def nvt_analyzer(self, dask_working_dir=None, **kwargs) -> Optional[NVTAnalyzer]:
+        from nvtabular.ops import Categorify
+
+        return [self.input_col] >> Categorify(out_path=dask_working_dir + "/Categorify")
 
     def load(self, analyze_data):
         if self._analyze_data.get("vocab") is None:
@@ -130,8 +134,8 @@ class CategoricalList(Categorical):
             export_as_parquet=self.export_as_parquet,
         )
 
-    def nvt_analyzer(self) -> NVTAnalyzer:
-        return CategoricalNVTAnalyzer(
+    def base_transformer(self) -> BaseNVTTransformer:
+        return CategoricalBaseNVTTransformer(
             input_col=self.input_col,
             col_type=NVTColType.SPARSE_AS_DENSE if self.seq_length > 1 else NVTColType.CAT,
             default_value=self.default_value,
@@ -155,8 +159,8 @@ class Bucketized(Categorical):
         self.bin_boundaries = bin_boundaries
         self.dimension = 1
 
-    def nvt_analyzer(self) -> NVTAnalyzer:
-        return BucketizeNVTAnalyzer(
+    def base_transformer(self) -> BaseNVTTransformer:
+        return BucketizeBaseNVTTransformer(
             input_col=self.input_col,
             col_type=NVTColType.CAT,
             default_value=self.default_value,
@@ -166,6 +170,11 @@ class Bucketized(Categorical):
     def bq_analyzer(self) -> BQAnalyzer:
         assert self.bins, "bins must be set when using bq_analyzer."
         return BucketizedBQAnalyzer(input_col=self.input_col, feature=self.name, bins=self.bins)
+
+    def nvt_analyzer(self, dask_working_dir=None, **kwargs) -> Optional[NVTAnalyzer]:
+        from nvtabular.ops import Bucketize, FillMissing
+
+        return [self.input_col] >> FillMissing(fill_val=self.default_value) >> Bucketize()
 
     def pandas_analyzer(self, **kwargs) -> PandasAnalyzer:
         return NumericalPandasAnalyzer(

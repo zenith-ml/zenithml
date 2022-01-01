@@ -2,10 +2,10 @@ from unittest.mock import patch
 
 import pytest
 
-from condorml.datasets import BQDataset
-from condorml.datasets import ParquetDataset
-from condorml.preprocess import Preprocessor
+from condorml.data import BQDataset
+from condorml.data import ParquetDataset
 from condorml.preprocess import Numerical, StandardNormalizer
+from condorml.preprocess import Preprocessor
 
 
 def test_parquet_dataset(test_df, datasets, tmp_path):
@@ -58,6 +58,7 @@ def test_parquet_dataset_to_tf(test_df, datasets, tmp_path):
     assert len(batch[0]["f_ints"]) == 2
     assert len(batch[1]) == 2
 
+
 def test_parquet_dataset_to_torch(test_df, datasets, tmp_path):
     test_df_path = datasets["dummy_df"]
     ds = ParquetDataset(test_df_path, tmp_path)
@@ -70,8 +71,7 @@ def test_parquet_dataset_to_torch(test_df, datasets, tmp_path):
     assert len(batch[1]) == 2
 
 
-
-@patch("condorml.datasets.dataset.BQRunner")
+@patch("condorml.data.core.BQRunner")
 def test_bq_dataset(mock_bq_runner, datasets, tmp_path):
     test_df_path = datasets["dummy_df"]
     mock_bq_runner().to_parquet.return_value = test_df_path

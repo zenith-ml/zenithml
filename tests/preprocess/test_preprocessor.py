@@ -1,13 +1,13 @@
 import shutil
+import tempfile
 
 import pandas as pd
-import tempfile
 
 import condorml
 from condorml import preprocess as pp
 
 
-def test_variable_groups( test_df ):
+def test_variable_groups(test_df):
     preprocessor = pp.Preprocessor()
     preprocessor.add_variable_group(
         "features",
@@ -31,7 +31,7 @@ def test_add_outcome_variable():
     assert preprocessor.outcome_variable == "t"
 
 
-def test_save_load( test_df ):
+def test_save_load(test_df):
     input_layers = [
         pp.StandardNormalizer(input_col="f_ints"),
         pp.Numerical(input_col="f_float"),

@@ -8,7 +8,7 @@ from cloudpickle import pickle
 
 from condorml.nvt.workflow import CustomNVTWorkflow
 from condorml.preprocess.analyze import BQAnalyzer
-from condorml.preprocess.analyze import NVTAnalyzer
+from condorml.preprocess.base_transformer import BaseNVTTransformer
 from condorml.preprocess.analyze import PandasAnalyzer
 from condorml.preprocess.constants import Backend
 from condorml.preprocess.constants import NVTColType
@@ -91,7 +91,7 @@ class Preprocessor:
         sparse_max = {}
         for group_name, vals in self._var_group_dict.items():
             for _feature in vals:
-                for analyzer in NVTAnalyzer.get_analyzers(_feature):
+                for analyzer in BaseNVTTransformer.get_analyzers(_feature):
                     if analyzer.col_type == NVTColType.CONT:
                         cont_cols.append(analyzer.input_col)
                     elif analyzer.col_type == NVTColType.CAT:
@@ -144,7 +144,7 @@ class Preprocessor:
 
         # This check is mostly to make testing easier but in practice nvt_ds must always be set.
         if nvt_ds:
-            self.nvt_workflow = NVTAnalyzer.fit(
+            self.nvt_workflow = BaseNVTTransformer.fit(
                 nvt_ds=nvt_ds,
                 input_group_dict=self._var_group_dict,
                 var_dict=self._var_dict,

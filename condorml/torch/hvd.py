@@ -1,6 +1,6 @@
 def init_hvd():
     import cupy
-    import torch
+    import tf
     import horovod.tensorflow as hvd
     from horovod.tensorflow import mpi_ops
 

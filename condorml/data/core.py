@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, Union
+from typing import List, Union, Optional
 
 import nvtabular as nvt
 
@@ -18,21 +18,22 @@ def _get_hvd_params(use_hvd, init_hvd_fn):
 
 
 class ParquetDataset:
-    def __init__(self, path: Union[str, Path], working_dir: Union[str, Path]):
+    def __init__(
+        self,
+        path: Union[str, Path],
+        working_dir: Union[str, Path],
+        preprocessor: Optional[Preprocessor] = None,
+    ):
         working_dir = Path(working_dir) if isinstance(working_dir, str) else working_dir
         self._path: Path = Path(path) if isinstance(path, str) else path
 
         self._base_nvt_dataset = nvt.Dataset(str(self._path / "*.parquet"))
         self._working_dir: Path = working_dir
-        self._preprocessor: Preprocessor = Preprocessor()
+        self.preprocessor: Preprocessor = preprocessor or Preprocessor()
 
     @property
     def base_nvt_dataset(self):
         return self._base_nvt_dataset
-
-    @property
-    def preprocessor(self):
-        return self._preprocessor
 
     @property
     def preprocessor_dir(self) -> Path:
@@ -53,7 +54,7 @@ class ParquetDataset:
             key (str): Name of the variable group.
             value (List[FTransformConfig]):
         """
-        self._preprocessor.add_variable_group(key, value)
+        self.preprocessor.add_variable_group(key, value)
 
     def add_outcome_variable(self, value: Union[str, List[str]]):
         """
@@ -62,7 +63,7 @@ class ParquetDataset:
         Args:
             value (str): A string indicating the column name of the outcome variable in the dataset.
         """
-        self._preprocessor.add_outcome_variable(value)
+        self.preprocessor.add_outcome_variable(value)
 
     def analyze(self, pandas_df, client=None):
         self.preprocessor.analyze(
@@ -81,7 +82,7 @@ class ParquetDataset:
             output_data_path=self.transformed_data_dir,
             out_files_per_proc=out_files_per_proc,
             additional_cols=additional_cols,
-            **kwargs
+            **kwargs,
         )
 
     def analyze_transform(self, pandas_df, client=None, out_files_per_proc=20, additional_cols=None, **kwargs):
@@ -99,7 +100,6 @@ class ParquetDataset:
         from condorml.torch import TorchDataset, init_hvd
 
         global_rank, global_size, seed_fn = _get_hvd_params(use_hvd, init_hvd)
-        self.preprocessor.load(self.preprocessor_dir)
         return TorchDataset.from_preprocessor(
             paths_or_dataset=str(self.transformed_data_dir),
             preprocessor=self.preprocessor,
@@ -123,7 +123,6 @@ class ParquetDataset:
         from condorml.tf import NVTKerasDataset, init_hvd
 
         global_rank, global_size, seed_fn = _get_hvd_params(use_hvd, init_hvd)
-        self.preprocessor.load(self.preprocessor_dir)
         return NVTKerasDataset.from_preprocessor(
             paths_or_dataset=str(self.transformed_data_dir),
             preprocessor=self.preprocessor,
@@ -153,3 +152,16 @@ class BQDataset(ParquetDataset):
             dask_working_dir=self._working_dir,
         )
         self.preprocessor.save(self._working_dir / "preprocessor")
+
+
+def load_dataset(
+    name: str,
+    data_dir: Optional[str] = None,
+    working_dir: Optional[str] = None,
+    features: Optional[Preprocessor] = None,
+    **kwargs
+) -> ParquetDataset:
+    from condorml.data import public as public_datasets
+
+    dataset_cls = public_datasets.__dict__[name.capitalize()]
+    return dataset_cls(data_dir=data_dir, working_dir=working_dir, **kwargs)

@@ -12,7 +12,7 @@ from condorml.preprocess.analyze import (
 
 @pytest.mark.parametrize("percentile", [None, 0.05])
 @pytest.mark.parametrize("bins", [None, 2])
-def test_numerical_analyzer( test_df, bins, percentile ):
+def test_numerical_analyzer(test_df, bins, percentile):
     input_col = "f_buk" if bins is not None else "f_ints"
     feature = f"feature_{input_col}"
     analyzer = NumericalPandasAnalyzer(
@@ -35,7 +35,7 @@ def test_numerical_analyzer( test_df, bins, percentile ):
 
 
 @pytest.mark.parametrize("top_k", [None, 2])
-def test_categorical_analyzer( test_df, top_k ):
+def test_categorical_analyzer(test_df, top_k):
     input_col = "f_cat"
     feature = f"feature_{input_col}"
     analyzer = CategoricalPandasAnalyzer(input_col=input_col, feature=feature, default_value="", top_k=top_k)
@@ -47,7 +47,7 @@ def test_categorical_analyzer( test_df, top_k ):
 
 
 @pytest.mark.parametrize("top_k", [None, 2])
-def test_catagorical_list_analyzer( test_df, top_k ):
+def test_catagorical_list_analyzer(test_df, top_k):
     input_col = "f2_cat"  # this is a list column
     feature = f"feature_{input_col}"
     analyzer = CategoricalListPandasAnalyzer(input_col=input_col, feature=feature, default_value="", top_k=top_k)
@@ -58,7 +58,7 @@ def test_catagorical_list_analyzer( test_df, top_k ):
         assert set(analyzer_data.get(f"{feature}_cat")) == {"A", "B", "C"}
 
 
-def test_pandas_analyzer_fit( test_df ):
+def test_pandas_analyzer_fit(test_df):
     feature_configs = [
         pp.Numerical(input_col="f_bool"),
         pp.StandardNormalizer(input_col="f_float"),

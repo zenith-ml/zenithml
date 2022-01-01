@@ -7,11 +7,12 @@ from condorml.preprocess.analyze import (
     StandardScalerBQAnalyzer,
     BQAnalyzer,
     LogScalerBQAnalyzer,
-)
-from condorml.preprocess.analyze.nvt_analyzer import (
-    NumericalNVTAnalyzer,
-    NVTColType,
     NVTAnalyzer,
+)
+from condorml.preprocess.base_transformer import (
+    NumericalBaseNVTTransformer,
+    NVTColType,
+    BaseNVTTransformer,
 )
 from condorml.preprocess.analyze.pandas_analyzer import NumericalPandasAnalyzer
 from condorml.preprocess.ftransform_configs.ftransform_config import FTransformConfig
@@ -28,18 +29,21 @@ class Numerical(FTransformConfig):
         super().__init__(input_col=input_col, default_value=default_value, dtype=dtype)
         self.dimension = dimension
 
-    def pandas_analyzer(self, **kwargs) -> Optional[PandasAnalyzer]:
-        return None
-
-    def nvt_analyzer(self) -> NVTAnalyzer:
-        return NumericalNVTAnalyzer(
+    def base_transformer(self) -> BaseNVTTransformer:
+        return NumericalBaseNVTTransformer(
             input_col=self.input_col,
             col_type=NVTColType.CONT,
             default_value=self.default_value,
             is_list=self.dimension > 1,
         )
 
+    def pandas_analyzer(self, **kwargs) -> Optional[PandasAnalyzer]:
+        return None
+
     def bq_analyzer(self) -> Optional[BQAnalyzer]:
+        return None
+
+    def nvt_analyzer(self, **kwargs) -> Optional[NVTAnalyzer]:
         return None
 
     def tf_preprocess_layer(self):
@@ -63,6 +67,11 @@ class StandardNormalizer(Numerical):
 
     def bq_analyzer(self) -> BQAnalyzer:
         return StandardScalerBQAnalyzer(input_col=self.input_col, feature=self.name)
+
+    def nvt_analyzer(self, **kwargs) -> Optional[NVTAnalyzer]:
+        from nvtabular.ops import Normalize, FillMissing
+
+        return [self.input_col] >> FillMissing(fill_val=self.default_value) >> Normalize()
 
     def load(self, analyze_data):
         self._analyze_data = {
@@ -98,6 +107,11 @@ class MinMaxNormalizer(Numerical):
 
     def bq_analyzer(self) -> BQAnalyzer:
         return StandardScalerBQAnalyzer(input_col=self.input_col, feature=self.name)
+
+    def nvt_analyzer(self, **kwargs) -> Optional[NVTAnalyzer]:
+        from nvtabular.ops import NormalizeMinMax, FillMissing
+
+        return [self.input_col] >> FillMissing(fill_val=self.default_value) >> NormalizeMinMax()
 
     def load(self, analyze_data):
         self._analyze_data = {
@@ -144,6 +158,9 @@ class LogNormalizer(Numerical):
             feature=self.name,
             percentile=self.percentile,
         )
+
+    def nvt_analyzer(self, **kwargs) -> Optional[NVTAnalyzer]:
+        raise NotImplementedError
 
     def bq_analyzer(self) -> BQAnalyzer:
         return LogScalerBQAnalyzer(input_col=self.input_col, feature=self.name, percentile=self.percentile)

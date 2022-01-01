@@ -3,11 +3,12 @@ from typing import List, Optional
 from condorml.preprocess.analyze import (
     PandasAnalyzer,
     BQAnalyzer,
-)
-from condorml.preprocess.analyze.nvt_analyzer import (
-    NumericalNVTAnalyzer,
-    NVTColType,
     NVTAnalyzer,
+)
+from condorml.preprocess.base_transformer import (
+    NumericalBaseNVTTransformer,
+    NVTColType,
+    BaseNVTTransformer,
 )
 from condorml.preprocess.ftransform_configs.ftransform_config import FTransformConfig
 
@@ -28,12 +29,9 @@ class CosineSimilarity(FTransformConfig):
     def name(self):
         return f"{self.input_col[0]}_cosine_{self.input_col[1]}"
 
-    def pandas_analyzer(self, **kwargs) -> Optional[PandasAnalyzer]:
-        return None
-
-    def nvt_analyzer(self) -> List[NVTAnalyzer]:
+    def base_transformer(self) -> List[BaseNVTTransformer]:
         return [
-            NumericalNVTAnalyzer(
+            NumericalBaseNVTTransformer(
                 input_col=col,
                 col_type=NVTColType.CONT,
                 default_value=self.default_value,
@@ -41,6 +39,12 @@ class CosineSimilarity(FTransformConfig):
             )
             for col in self.input_col
         ]
+
+    def pandas_analyzer(self, **kwargs) -> Optional[PandasAnalyzer]:
+        return None
+
+    def nvt_analyzer(self, **kwargs) -> Optional[NVTAnalyzer]:
+        return None
 
     def bq_analyzer(self) -> Optional[BQAnalyzer]:
         return None

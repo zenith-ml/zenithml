@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 
-def create_mini_test_df( path=None ):
+def create_mini_test_df(path=None):
     df: pd.DataFrame = pd.DataFrame(
         data={
             "f_bools": [True, False, True, False, True],

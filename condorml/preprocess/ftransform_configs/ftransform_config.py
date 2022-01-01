@@ -1,12 +1,14 @@
+import abc
 from typing import Union, List, Dict, Any, Optional
 
-from condorml.preprocess.analyze import PandasAnalyzer
 from condorml.preprocess.analyze import BQAnalyzer
 from condorml.preprocess.analyze import NVTAnalyzer
+from condorml.preprocess.analyze import PandasAnalyzer
+from condorml.preprocess.base_transformer import BaseNVTTransformer
 from condorml.preprocess.constants import Backend
 
 
-class FTransformConfig:
+class FTransformConfig(abc.ABC):
     def __init__(
         self,
         input_col: Union[List[str], str],
@@ -50,18 +52,27 @@ class FTransformConfig:
     def load(self, analyze_data):
         pass
 
+    @abc.abstractmethod
+    def base_transformer(self) -> Union[BaseNVTTransformer, List[BaseNVTTransformer]]:
+        raise NotImplementedError
+
+    @abc.abstractmethod
     def pandas_analyzer(self, **kwargs) -> Optional[PandasAnalyzer]:
         raise NotImplementedError
 
-    def nvt_analyzer(self) -> Union[NVTAnalyzer, List[NVTAnalyzer]]:
-        raise NotImplementedError
-
+    @abc.abstractmethod
     def bq_analyzer(self) -> Optional[BQAnalyzer]:
         raise NotImplementedError
 
+    @abc.abstractmethod
+    def nvt_analyzer(self) -> Optional[NVTAnalyzer]:
+        raise NotImplementedError
+
+    @abc.abstractmethod
     def torch_preprocess_layer(self):
         raise NotImplementedError
 
+    @abc.abstractmethod
     def tf_preprocess_layer(self):
         raise NotImplementedError
 
