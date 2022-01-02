@@ -7,7 +7,7 @@ import pandas as pd
 from cloudpickle import pickle
 
 from condorml.nvt.workflow import CustomNVTWorkflow
-from condorml.preprocess.analyze import BQAnalyzer
+from condorml.preprocess.analyze import BQAnalyzer, NVTAnalyzer
 from condorml.preprocess.base_transformer import BaseNVTTransformer
 from condorml.preprocess.analyze import PandasAnalyzer
 from condorml.preprocess.constants import Backend
@@ -127,20 +127,28 @@ class Preprocessor:
         dask_working_dir: Optional[Union[str, Path]] = None,
     ):
 
-        for group_name, group_input_values in self._var_group_dict.items():
-            if pandas_df is not None:
-                logging.info("data is pandas DataFrame. Using AnalyzerType.PandasAnalyzer")
-                self.analysis_data[group_name] = PandasAnalyzer.fit(group_input_values, df=pandas_df)
+        if bq_table is None and pandas_df is None:
+            self.analysis_data = NVTAnalyzer.fit(
+                nvt_ds=nvt_ds,
+                input_group_dict=self._var_group_dict,
+                client=client,
+                dask_working_dir=dask_working_dir,
+            )
+        else:
+            for group_name, group_input_values in self._var_group_dict.items():
+                if pandas_df is not None:
+                    logging.info("data is pandas DataFrame. Using AnalyzerType.PandasAnalyzer")
+                    self.analysis_data[group_name] = PandasAnalyzer.fit(group_input_values, df=pandas_df)
 
-            if bq_table:
-                logging.info("data is str. Using AnalyzerType.BQAnalyzer")
-                self.analysis_data[group_name], _ = BQAnalyzer.fit(
-                    group_input_values,
-                    bq_table=bq_table,
-                    where_clause=where_clause,
-                    renew_cache=renew_cache,
-                    output_path=bq_analyzer_out_path,
-                )
+                elif bq_table is not None:
+                    logging.info("data is str. Using AnalyzerType.BQAnalyzer")
+                    self.analysis_data[group_name], _ = BQAnalyzer.fit(
+                        group_input_values,
+                        bq_table=bq_table,
+                        where_clause=where_clause,
+                        renew_cache=renew_cache,
+                        output_path=bq_analyzer_out_path,
+                    )
 
         # This check is mostly to make testing easier but in practice nvt_ds must always be set.
         if nvt_ds:

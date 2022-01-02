@@ -71,7 +71,7 @@ class StandardNormalizer(Numerical):
         return StandardScalerBQAnalyzer(input_col=self.input_col, feature=self.name)
 
     def nvt_analyzer(self, **kwargs) -> Optional[NVTAnalyzer]:
-        return NormalizeNVTAnalyzer(input_col=self.input_col, default_value=self.default_value)
+        return NormalizeNVTAnalyzer(input_col=self.input_col, feature=self.name, default_value=self.default_value)
 
     def load(self, analyze_data):
         self._analyze_data = {
@@ -109,7 +109,9 @@ class MinMaxNormalizer(Numerical):
         return StandardScalerBQAnalyzer(input_col=self.input_col, feature=self.name)
 
     def nvt_analyzer(self, **kwargs) -> Optional[NVTAnalyzer]:
-        return NormalizeMinMaxNVTAnalyzer(input_col=self.input_col, default_value=self.default_value)
+        return NormalizeMinMaxNVTAnalyzer(
+            input_col=self.input_col, feature=self.name, default_value=self.default_value
+        )
 
     def load(self, analyze_data):
         self._analyze_data = {

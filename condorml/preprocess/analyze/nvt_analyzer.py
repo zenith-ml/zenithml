@@ -10,9 +10,10 @@ from condorml.preprocess.base_transformer import _merge_nvt_ops
 
 
 class NVTAnalyzer(abc.ABC):
-    def __init__(self, input_col: str, default_value: Optional[Union[str, float, int]] = None):
+    def __init__(self, input_col: str, feature: str, default_value: Optional[Union[str, float, int]] = None):
         self.input_col = input_col
         self.default_value = default_value
+        self.feature = feature
 
     @abc.abstractmethod
     def ops(self, **kwargs):
@@ -24,7 +25,6 @@ class NVTAnalyzer(abc.ABC):
         ops = []
         analyze_data = {}
         for group_name, vals in input_group_dict.items():
-            analyze_data[group_name] = {}
             for _feature in vals:
                 ops.append(_feature.nvt_analyzer().ops(dask_working_dir=dask_working_dir))
 
@@ -36,7 +36,11 @@ class NVTAnalyzer(abc.ABC):
         for parent_node in nvt_workflow.output_node.parents_with_dependencies:
             for group_name, vals in input_group_dict.items():
                 for _feature in vals:
-                    analyze_data[group_name].update(_feature.get_data(parent_node.op))
+                    analyze_data.update(_feature.nvt_analyzer().get_data(parent_node.op, group_name))
+
+        for group_name, vals in input_group_dict.items():
+            for _feature in vals:
+                _feature.load(analyze_data)
         return analyze_data
 
 
@@ -45,13 +49,13 @@ class NormalizeNVTAnalyzer(NVTAnalyzer):
         assert self.default_value is not None, "default_value must be set"
         return [self.input_col] >> FillMissing(fill_val=self.default_value) >> Normalize()
 
-    def get_data(self, op: Normalize):
+    def get_data(self, op: Normalize, group_name: str):
         data = {}
         if isinstance(op, Normalize):
             for var, val in op.means.items():
-                data[f"{var}_avg"] = val
+                data[f"{self.feature}_avg"] = val
             for var, val in op.stds.items():
-                data[f"{var}_stddev"] = val
+                data[f"{self.feature}_stddev"] = val
         return data
 
 
@@ -60,13 +64,13 @@ class NormalizeMinMaxNVTAnalyzer(NVTAnalyzer):
         assert self.default_value is not None, "default_value must be set"
         return [self.input_col] >> FillMissing(fill_val=self.default_value) >> NormalizeMinMax()
 
-    def get_data(self, op: NormalizeMinMax):
+    def get_data(self, op: NormalizeMinMax, group_name: str):
         data = {}
         if isinstance(op, NormalizeMinMax):
             for var, val in op.mins.items():
-                data[f"{var}_min"] = val
+                data[f"{self.feature}_min"] = val
             for var, val in op.maxs.items():
-                data[f"{var}_max"] = val
+                data[f"{self.feature}_max"] = val
         return data
 
 
@@ -75,10 +79,10 @@ class CategorifyNVTAnalyzer(NVTAnalyzer):
         dask_working_dir = Path(dask_working_dir) if isinstance(dask_working_dir, str) else dask_working_dir
         return [self.input_col] >> Categorify(out_path=str(dask_working_dir / "Categorify"))
 
-    def get_data(self, op: Categorify):
+    def get_data(self, op: Categorify, group_name: str):
         data = {}
         if isinstance(op, Categorify):
             for var, val in op.categories.items():
-                data[f"{var}_cat"] = val
+                data[f"{self.feature}_cat"] = list(pd.read_parquet(val)[var].values)
 
         return data

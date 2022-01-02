@@ -71,7 +71,7 @@ class Categorical(FTransformConfig):
         )
 
     def nvt_analyzer(self, dask_working_dir=None, **kwargs) -> Optional[NVTAnalyzer]:
-        return CategorifyNVTAnalyzer(input_col=self.input_col, default_value=self.default_value)
+        return CategorifyNVTAnalyzer(input_col=self.input_col, feature=self.name, default_value=self.default_value)
 
     def load(self, analyze_data):
         if self._analyze_data.get("vocab") is None:

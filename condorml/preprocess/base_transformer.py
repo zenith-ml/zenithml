@@ -1,4 +1,5 @@
 import abc
+from pathlib import Path
 from typing import Optional, Any, List, Union
 
 import numpy as np
@@ -92,13 +93,18 @@ class BucketizeBaseNVTTransformer(BaseNVTTransformer):
 
 
 class CategoricalBaseNVTTransformer(BaseNVTTransformer):
-    def ops(self, dask_working_dir: Optional[str] = None, **kwargs) -> nvt.ops.Operator:
+    def ops(
+        self, dask_working_dir: Optional[Union[str, Path]] = None, vocab: List[str] = None, **kwargs,
+    ) -> nvt.ops.Operator:
+        dask_working_dir = Path(dask_working_dir) if isinstance(dask_working_dir, str) else dask_working_dir
         assert dask_working_dir, "dask_working_dir must be set for CategoricalNVTPreprocessAnalyzer"
+        assert "vocab" in self.kwargs, "vocab must be set for CategoricalNVTPreprocessAnalyzer"
         vocab = self.kwargs.get("vocab")
         cat_vocabs = {}
         if isinstance(vocab, list):
             cat_vocabs[self.input_col] = pd.Series(vocab)
         else:
             cat_vocabs[self.input_col] = vocab
-        op = [self.input_col] >> VocabCategorify(vocabs=cat_vocabs, out_path=dask_working_dir + "/Categorify")
+        print(self.input_col, type(cat_vocabs[self.input_col]))
+        op = [self.input_col] >> VocabCategorify(vocabs=cat_vocabs, out_path=str(dask_working_dir / "Categorify"))
         return op
