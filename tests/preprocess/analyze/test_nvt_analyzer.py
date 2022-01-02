@@ -31,11 +31,10 @@ def test_nvt_analyzer_fit(test_df, datasets, tmp_path):
         ]
     }
     analyze_data = NVTAnalyzer.fit(nvt.Dataset(test_df), input_group_dict, client=None, dask_working_dir=tmp_path)
-    assert "features" in analyze_data
     expected_set = {
         f"features_{f}" for f in {"f_ints_avg", "f_ints_stddev", "f_float_min", "f_float_max", "f_cat_cat"}
     }
-    assert expected_set - set(analyze_data["features"].keys()) == set()
+    assert expected_set - set(analyze_data.keys()) == set()
 
 
 @pytest.mark.parametrize(

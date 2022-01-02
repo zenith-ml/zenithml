@@ -93,12 +93,11 @@ class BucketizeBaseNVTTransformer(BaseNVTTransformer):
 
 
 class CategoricalBaseNVTTransformer(BaseNVTTransformer):
-    def ops(
-        self, dask_working_dir: Optional[Union[str, Path]] = None, vocab: List[str] = None, **kwargs,
-    ) -> nvt.ops.Operator:
-        dask_working_dir = Path(dask_working_dir) if isinstance(dask_working_dir, str) else dask_working_dir
+    def ops(self, dask_working_dir: Optional[Union[str, Path]] = None, **kwargs) -> nvt.ops.Operator:
         assert dask_working_dir, "dask_working_dir must be set for CategoricalNVTPreprocessAnalyzer"
         assert "vocab" in self.kwargs, "vocab must be set for CategoricalNVTPreprocessAnalyzer"
+
+        dask_working_dir = Path(dask_working_dir) if isinstance(dask_working_dir, str) else dask_working_dir
         vocab = self.kwargs.get("vocab")
         cat_vocabs = {}
         if isinstance(vocab, list):
