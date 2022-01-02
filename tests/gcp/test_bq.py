@@ -49,7 +49,8 @@ def test_query_no_cache(mock_bq_client, mock_job_config, renew_cache):
     mock_bq_client().query.assert_called_once_with(formatted_query, job_config=mock_job_config())
 
 
-def test_clear_cache():
+@patch("condorml.gcp.bq.bigquery.Client")
+def test_clear_cache(mock_bq_client):
     try:
         bq = BQRunner("project")
         bq.clear_cache()
