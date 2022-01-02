@@ -20,6 +20,7 @@ from condorml.preprocess.base_transformer import (
     BucketizeBaseNVTTransformer,
 )
 from condorml.preprocess.ftransform_configs.ftransform_config import FTransformConfig
+from condorml.preprocess.analyze.nvt_analyzer import CategorifyNVTAnalyzer
 
 
 class Categorical(FTransformConfig):
@@ -70,9 +71,7 @@ class Categorical(FTransformConfig):
         )
 
     def nvt_analyzer(self, dask_working_dir=None, **kwargs) -> Optional[NVTAnalyzer]:
-        from nvtabular.ops import Categorify
-
-        return [self.input_col] >> Categorify(out_path=dask_working_dir + "/Categorify")
+        return CategorifyNVTAnalyzer(input_col=self.input_col, default_value=self.default_value)
 
     def load(self, analyze_data):
         if self._analyze_data.get("vocab") is None:
@@ -172,9 +171,8 @@ class Bucketized(Categorical):
         return BucketizedBQAnalyzer(input_col=self.input_col, feature=self.name, bins=self.bins)
 
     def nvt_analyzer(self, dask_working_dir=None, **kwargs) -> Optional[NVTAnalyzer]:
-        from nvtabular.ops import Bucketize, FillMissing
-
-        return [self.input_col] >> FillMissing(fill_val=self.default_value) >> Bucketize()
+        assert self.bin_boundaries, "bin_boundaries must be set when using nvt_analyzer."
+        return None
 
     def pandas_analyzer(self, **kwargs) -> PandasAnalyzer:
         return NumericalPandasAnalyzer(

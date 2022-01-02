@@ -7,12 +7,8 @@ import pytest
 from condorml.gcp import BQRunner
 
 
-def test_set_projectid():
-    bq = BQRunner(project="dummy")
-    assert bq.bq_client.project == "dummy"
-
-
-def test_query_dry_run(caplog):
+@patch("condorml.gcp.bq.bigquery.Client")
+def test_query_dry_run(mock_bq_client, caplog):
     bq = BQRunner("project")
     query = """SELECT * FROM `project.dataset.table`"""
     with caplog.at_level(logging.INFO):

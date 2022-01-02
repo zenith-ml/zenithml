@@ -9,12 +9,14 @@ from condorml.preprocess.analyze import (
     LogScalerBQAnalyzer,
     NVTAnalyzer,
 )
+from condorml.preprocess.analyze.nvt_analyzer import NormalizeMinMaxNVTAnalyzer
+from condorml.preprocess.analyze.nvt_analyzer import NormalizeNVTAnalyzer
+from condorml.preprocess.analyze.pandas_analyzer import NumericalPandasAnalyzer
 from condorml.preprocess.base_transformer import (
     NumericalBaseNVTTransformer,
     NVTColType,
     BaseNVTTransformer,
 )
-from condorml.preprocess.analyze.pandas_analyzer import NumericalPandasAnalyzer
 from condorml.preprocess.ftransform_configs.ftransform_config import FTransformConfig
 
 
@@ -69,9 +71,7 @@ class StandardNormalizer(Numerical):
         return StandardScalerBQAnalyzer(input_col=self.input_col, feature=self.name)
 
     def nvt_analyzer(self, **kwargs) -> Optional[NVTAnalyzer]:
-        from nvtabular.ops import Normalize, FillMissing
-
-        return [self.input_col] >> FillMissing(fill_val=self.default_value) >> Normalize()
+        return NormalizeNVTAnalyzer(input_col=self.input_col, default_value=self.default_value)
 
     def load(self, analyze_data):
         self._analyze_data = {
@@ -109,9 +109,7 @@ class MinMaxNormalizer(Numerical):
         return StandardScalerBQAnalyzer(input_col=self.input_col, feature=self.name)
 
     def nvt_analyzer(self, **kwargs) -> Optional[NVTAnalyzer]:
-        from nvtabular.ops import NormalizeMinMax, FillMissing
-
-        return [self.input_col] >> FillMissing(fill_val=self.default_value) >> NormalizeMinMax()
+        return NormalizeMinMaxNVTAnalyzer(input_col=self.input_col, default_value=self.default_value)
 
     def load(self, analyze_data):
         self._analyze_data = {
