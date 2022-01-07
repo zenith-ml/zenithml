@@ -135,3 +135,6 @@ dmypy.json
 scripts/*.yaml
 !scripts/ray.tf-template.yaml
 !scripts/ray.torch-template.yaml
+
+# Ignore sp files
+examples/sp*/

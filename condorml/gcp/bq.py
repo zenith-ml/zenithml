@@ -110,7 +110,6 @@ class BQRunner:
 
         fs = GCSFileSystem()
         if fs.exists(destination_gcs):
-            print("here")
             rich_logging().info("Destination GCS Path already exist, skipping big query export!")
             return out_path
 

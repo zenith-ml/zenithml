@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 # bash build_and_push.sh torch 0.0.0
 # bash build_and_push.sh tf 0.0.0
 FRAMEWORK=$1

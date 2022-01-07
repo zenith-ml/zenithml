@@ -80,7 +80,7 @@ class CategorifyNVTAnalyzer(NVTAnalyzer):
     def ops(self, dask_working_dir: Optional[Union[str, Path]] = None, **kwargs):
         assert dask_working_dir, "dask_working_dir must be set for CategorifyNVTAnalyzer"
         dask_working_dir = Path(dask_working_dir) if isinstance(dask_working_dir, str) else dask_working_dir
-        return [self.input_col] >> Categorify(out_path=str(dask_working_dir / "Categorify"))
+        return [self.input_col] >> Categorify(out_path=str(dask_working_dir / "preprocessor" / "categorify"))
 
     def get_data(self, op: Categorify):
         data = {}

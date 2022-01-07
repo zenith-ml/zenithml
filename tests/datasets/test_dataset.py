@@ -9,7 +9,8 @@ from condorml.preprocess import Preprocessor
 
 
 def test_parquet_dataset(test_df, datasets, tmp_path):
-    test_df_path = datasets["dummy_df"]
+    test_df_path = str(datasets["dummy_df"])
+
     ds = ParquetDataset(test_df_path, tmp_path)
 
     assert ds.base_nvt_dataset.num_rows == len(test_df)
@@ -19,7 +20,8 @@ def test_parquet_dataset(test_df, datasets, tmp_path):
 
 
 def test_parquet_dataset_variables(datasets, tmp_path):
-    test_df_path = datasets["dummy_df"]
+    test_df_path = str(datasets["dummy_df"])
+
     ds = ParquetDataset(test_df_path, tmp_path)
     ds.add_outcome_variable("y")
     ds.add_variable_group("features", [Numerical("dummy_col")])
@@ -30,7 +32,8 @@ def test_parquet_dataset_variables(datasets, tmp_path):
 
 @pytest.mark.parametrize("transform", [Numerical, StandardNormalizer])
 def test_parquet_dataset_analyze(transform, test_df, datasets, tmp_path):
-    test_df_path = datasets["dummy_df"]
+    test_df_path = str(datasets["dummy_df"])
+
     ds = ParquetDataset(test_df_path, tmp_path)
     ds.add_outcome_variable("y")
     ds.add_variable_group("features", [transform("f_ints")])
@@ -48,7 +51,8 @@ def test_parquet_dataset_analyze(transform, test_df, datasets, tmp_path):
 
 
 def test_parquet_dataset_to_tf(test_df, datasets, tmp_path):
-    test_df_path = datasets["dummy_df"]
+    test_df_path = str(datasets["dummy_df"])
+
     ds = ParquetDataset(test_df_path, tmp_path)
     ds.add_outcome_variable("y")
     ds.add_variable_group("features", [Numerical("f_ints")])
@@ -60,7 +64,8 @@ def test_parquet_dataset_to_tf(test_df, datasets, tmp_path):
 
 
 def test_parquet_dataset_to_torch(test_df, datasets, tmp_path):
-    test_df_path = datasets["dummy_df"]
+    test_df_path = str(datasets["dummy_df"])
+
     ds = ParquetDataset(test_df_path, tmp_path)
     ds.add_outcome_variable("y")
     ds.add_variable_group("features", [Numerical("f_ints")])
@@ -73,7 +78,8 @@ def test_parquet_dataset_to_torch(test_df, datasets, tmp_path):
 
 @patch("condorml.data.core.BQRunner")
 def test_bq_dataset(mock_bq_runner, datasets, tmp_path):
-    test_df_path = datasets["dummy_df"]
+    test_df_path = str(datasets["dummy_df"])
+
     mock_bq_runner().to_parquet.return_value = test_df_path
 
     ds = BQDataset(bq_table="project.dataset.table", gcs_datasets_dir="gs://dummy", working_dir=tmp_path)

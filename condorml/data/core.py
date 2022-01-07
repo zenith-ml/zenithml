@@ -1,11 +1,13 @@
 from pathlib import Path
 from typing import List, Union, Optional
 
-import nvtabular as nvt
+import numpy as np
 
 from condorml.gcp import BQRunner
+from condorml.nvt.utils import validate_data_path
 from condorml.preprocess import Preprocessor
 from condorml.preprocess.ftransform_configs.ftransform_config import FTransformConfig
+from condorml.utils import rich_logging
 
 
 def _get_hvd_params(use_hvd, init_hvd_fn):
@@ -20,24 +22,35 @@ def _get_hvd_params(use_hvd, init_hvd_fn):
 class ParquetDataset:
     def __init__(
         self,
-        path: Union[str, Path],
+        path: Union[str, Path, List[str], List[Path]],
         working_dir: Union[str, Path],
         preprocessor: Optional[Preprocessor] = None,
     ):
         working_dir = Path(working_dir) if isinstance(working_dir, str) else working_dir
-        self._path: Path = Path(path) if isinstance(path, str) else path
-
-        self._base_nvt_dataset = nvt.Dataset(str(self._path / "*.parquet"))
+        self._base_nvt_dataset = None
+        self._dataset_path = path
         self._working_dir: Path = working_dir
         self.preprocessor: Preprocessor = preprocessor or Preprocessor()
 
     @property
     def base_nvt_dataset(self):
+        if self._base_nvt_dataset is None:
+            rich_logging().debug(f"Reading dataset from {self._dataset_path}")
+            print(self._dataset_path)
+            self._base_nvt_dataset = validate_data_path(self._dataset_path)
         return self._base_nvt_dataset
+
+    @property
+    def dataset_path(self) -> Union[str, Path, List[str], List[Path]]:
+        return self._dataset_path
 
     @property
     def preprocessor_dir(self) -> Path:
         return self._working_dir / "preprocessor"
+
+    @property
+    def working_dir(self) -> Path:
+        return self._working_dir
 
     @property
     def transformed_data_dir(self) -> Path:
@@ -65,7 +78,16 @@ class ParquetDataset:
         """
         self.preprocessor.add_outcome_variable(value)
 
-    def analyze(self, pandas_df, client=None):
+    def load_preprocessor(self):
+        if self.preprocessor_dir.exists():
+            self.preprocessor.load(self.preprocessor_dir)
+        else:
+            raise Exception(
+                f"Preprocessor does not exists at {self.preprocessor_dir}, "
+                f"Make sure to call analyze_transform() before calling load(), to_tf(), to_torch()"
+            )
+
+    def analyze(self, pandas_df=None, client=None):
         self.preprocessor.analyze(
             nvt_ds=self.base_nvt_dataset,
             pandas_df=pandas_df,
@@ -85,23 +107,38 @@ class ParquetDataset:
             **kwargs,
         )
 
-    def analyze_transform(self, pandas_df, client=None, out_files_per_proc=20, additional_cols=None, **kwargs):
+    def analyze_transform(self, pandas_df=None, client=None, out_files_per_proc=20, additional_cols=None, **kwargs):
         self.analyze(pandas_df=pandas_df, client=client)
         self.transform(out_files_per_proc=out_files_per_proc, additional_cols=additional_cols, **kwargs)
 
     def to_torch(
         self,
         batch_size: int,
-        use_hvd: bool = False,
+        transform_data: bool = False,
         buffer_size=0.06,
         parts_per_chunk=1,
         shuffle: bool = True,
+        seed_fn=None,
+        drop_last=False,
+        global_size=None,
+        global_rank=None,
+        side_cols=None,
+        map_fn=None,
     ):
-        from condorml.torch import TorchDataset, init_hvd
+        from condorml.torch import TorchDataset
 
-        global_rank, global_size, seed_fn = _get_hvd_params(use_hvd, init_hvd)
+        # global_rank, global_size, seed_fn = _get_hvd_params(use_hvd, init_hvd)
+        if self.preprocessor is None:
+            self.load_preprocessor()
+        if transform_data:
+            paths_or_dataset = self.preprocessor.transform(
+                data=validate_data_path(str(self.dataset_path)),
+                additional_cols=side_cols,
+            )
+        else:
+            paths_or_dataset = str(self.transformed_data_dir)
         return TorchDataset.from_preprocessor(
-            paths_or_dataset=str(self.transformed_data_dir),
+            paths_or_dataset=paths_or_dataset,
             preprocessor=self.preprocessor,
             batch_size=batch_size,
             shuffle=shuffle,
@@ -110,6 +147,9 @@ class ParquetDataset:
             global_size=global_size,
             global_rank=global_rank,
             seed_fn=seed_fn,
+            side_cols=side_cols,
+            drop_last=drop_last,
+            map_fn=map_fn,
         )
 
     def to_tf(
@@ -123,6 +163,7 @@ class ParquetDataset:
         from condorml.tf import NVTKerasDataset, init_hvd
 
         global_rank, global_size, seed_fn = _get_hvd_params(use_hvd, init_hvd)
+        self.load_preprocessor()
         return NVTKerasDataset.from_preprocessor(
             paths_or_dataset=str(self.transformed_data_dir),
             preprocessor=self.preprocessor,
@@ -142,7 +183,7 @@ class BQDataset(ParquetDataset):
         super().__init__(path=path, working_dir=working_dir)
         self.bq_table = bq_table
 
-    def analyze(self, renew_cache=False, client=None):
+    def analyze(self, renew_cache=False, client=None, **kwargs):
         self.preprocessor.analyze(
             bq_table=self.bq_table,
             nvt_ds=self.base_nvt_dataset,
@@ -159,7 +200,7 @@ def load_dataset(
     data_dir: Optional[str] = None,
     working_dir: Optional[str] = None,
     features: Optional[Preprocessor] = None,
-    **kwargs
+    **kwargs,
 ) -> ParquetDataset:
     from condorml.data import public as public_datasets
 

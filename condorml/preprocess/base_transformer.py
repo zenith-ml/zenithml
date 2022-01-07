@@ -104,6 +104,7 @@ class CategoricalBaseNVTTransformer(BaseNVTTransformer):
             cat_vocabs[self.input_col] = pd.Series(vocab)
         else:
             cat_vocabs[self.input_col] = vocab
-        print(self.input_col, type(cat_vocabs[self.input_col]))
-        op = [self.input_col] >> VocabCategorify(vocabs=cat_vocabs, out_path=str(dask_working_dir / "Categorify"))
+        op = [self.input_col] >> VocabCategorify(
+            vocabs=cat_vocabs, out_path=str(dask_working_dir / "preprocessor" / "categorify")
+        )
         return op

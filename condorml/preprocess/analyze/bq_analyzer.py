@@ -10,8 +10,8 @@ from condorml.gcp import BQRunner
 def _generate_parquet_export(all_analyzers, bq_table, where_clause, output_path, renew_cache):
     analyze_data = {}
     for pp in all_analyzers:
-        data = pp.export_to_parquet(bq_table, where_clause, output_path, renew_cache)
-        if data != {}:
+        if pp.export_as_parquet:
+            data = pp.export_to_parquet(bq_table, where_clause, output_path, renew_cache)
             output_path.mkdir(exist_ok=True, parents=True)
             analyze_data.update(data)
     return analyze_data
@@ -85,8 +85,8 @@ class StandardScalerBQAnalyzer(BQAnalyzer):
 
 
 class LogScalerBQAnalyzer(BQAnalyzer):
-    def __init__(self, input_col: Union[str, List[str]], feature: str, percentile: float):
-        super().__init__(input_col=input_col, feature=feature)
+    def __init__(self, input_col: Union[str, List[str]], feature: str, percentile: float, **kwargs):
+        super().__init__(input_col=input_col, feature=feature, **kwargs)
         self.percentile = percentile
 
     def analyze_subquery(self, base_table, where_clause) -> Optional[str]:
@@ -108,8 +108,8 @@ class LogScalerBQAnalyzer(BQAnalyzer):
 
 
 class BucketizedBQAnalyzer(BQAnalyzer):
-    def __init__(self, input_col: Union[str, List[str]], feature: str, bins: int):
-        super().__init__(input_col=input_col, feature=feature)
+    def __init__(self, input_col: Union[str, List[str]], feature: str, bins: int, **kwargs):
+        super().__init__(input_col=input_col, feature=feature, **kwargs)
         self.bins = bins
 
     def analyze_query_fields(self, **kwargs) -> List[str]:

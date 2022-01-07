@@ -1,5 +1,5 @@
 import numpy as np
-import nvtabular as nvt
+
 from nvtabular.dispatch import HAS_GPU
 from nvtabular.dispatch import annotate
 from nvtabular.dispatch import is_series_or_dataframe_object
@@ -7,6 +7,7 @@ from nvtabular.loader.torch import DLDataLoader
 from nvtabular.loader.torch import TorchAsyncItr
 from toolz.itertoolz import sliding_window
 
+from condorml.nvt.utils import validate_data_path
 from condorml.preprocess import Preprocessor
 
 
@@ -92,14 +93,9 @@ class TorchDataset(TorchAsyncItr):
     ):
         self.side_cols = side_cols
         device = device if HAS_GPU else "cpu"
-        if isinstance(paths_or_dataset, str):
-            paths_or_dataset += "/*.parquet" if not paths_or_dataset.endswith(".parquet") else ""
-            dataset = nvt.Dataset(paths_or_dataset)
-        else:
-            dataset = paths_or_dataset
 
         super().__init__(
-            dataset=dataset,
+            dataset=validate_data_path(paths_or_dataset),
             batch_size=batch_size,
             labels=label_names,
             cats=cat_names,

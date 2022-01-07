@@ -2,6 +2,7 @@ from typing import Union, Tuple
 
 import torch
 import torch.nn as nn
+from nvtabular.dispatch import HAS_GPU
 
 
 class EmbeddingLayer(nn.Module):
@@ -13,6 +14,7 @@ class EmbeddingLayer(nn.Module):
         seq_length: int = 1,
         trainable=False,
         weights=None,
+        use_gpu=True,
     ):
 
         super().__init__()

@@ -1,7 +1,11 @@
-from typing import Optional, Dict, Any
+from pathlib import Path
+from typing import Optional, Dict, Any, Union
 
 import torch
+from nvtabular import dispatch
 from torch import nn
+
+from condorml.utils import rich_logging
 
 
 def concat_layers(inputs, layers, split_str="__SPLIT__"):
@@ -31,3 +35,40 @@ class BaseTorchModel(nn.Module):
         self.preprocess_layers, self.input_dimensions = get_preprocess_layers_and_dims(preprocess_layers)
         self.config = config
         self.hvd = hvd
+
+    def loss_fn(self, logits, truth):
+        raise NotImplementedError
+
+    @staticmethod
+    def trainer(model, ds, optimizer, config, model_dir: Optional[Union[str, Path]] = None):
+
+        logger = rich_logging()
+        if dispatch.HAS_GPU:
+            model = model.to("cuda")
+
+        for epoch in range(config.get("num_epoch")):
+            for idx, batch in enumerate(ds):
+                x, y = batch
+                logits = model.forward(x)
+                loss = model.loss_fn(logits, y)
+                optimizer.zero_grad()
+                loss.backward()
+                optimizer.step()
+                if idx % 10 == 0:
+                    logger.info(f"\tBatch {idx:02d}. Train loss: {loss:.4f}.")
+            logger.info(f"Epoch {epoch:02d}. Train loss: {loss:.4f}.")
+
+        if model_dir:
+            model_dir = Path(model_dir)
+            if not model_dir.exists():
+                model_dir.mkdir(parents=True, exist_ok=True)
+
+            model_path = str(model_dir / "model.pt")
+            logger.info(f"Saving Model to {model_path}")
+            torch.save(model, f=model_path)
+
+    @staticmethod
+    def load(model_dir: Union[str, Path]):
+        model_dir = model_dir if isinstance(model_dir, Path) else Path(model_dir)
+        model_path = str(model_dir / "model.pt")
+        return torch.load(model_path)
