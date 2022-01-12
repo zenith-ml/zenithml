@@ -7,11 +7,11 @@ BASEIMAGE_VER=21.12
 VER=$2
 if [ "$FRAMEWORK" == "tf" ]
 then
-  docker build . -f docker/Dockerfile -t zenithml/zenith-tf:$VER --build-arg BASE_VER=$BASEIMAGE_VER --build-arg BASE_IMAGE=nvcr.io/nvidia/merlin/merlin-tensorflow-training
+  docker build . -f docker/Dockerfile -t zenithml/zenithml-tf:$VER --build-arg BASE_VER=$BASEIMAGE_VER --build-arg BASE_IMAGE=nvcr.io/nvidia/merlin/merlin-tensorflow-training
   docker push zenithml/zenithml-tf:$VER
 elif [ "$FRAMEWORK" == "torch" ]
 then
-  docker build . -f docker/Dockerfile -t zenithml/zenith-torch:$VER --build-arg BASE_VER=$BASEIMAGE_VER --build-arg BASE_IMAGE=nvcr.io/nvidia/merlin/merlin-pytorch-training
+  docker build . -f docker/Dockerfile -t zenithml/zenithml-torch:$VER --build-arg BASE_VER=$BASEIMAGE_VER --build-arg BASE_IMAGE=nvcr.io/nvidia/merlin/merlin-pytorch-training
   docker push zenithml/zenithml-torch:$VER
 else
   echo "Invalid FRAMEWORK. Only tf or torch allowed."
