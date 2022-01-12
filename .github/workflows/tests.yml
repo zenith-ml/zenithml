@@ -46,7 +46,7 @@ jobs:
 
     - name: Mypy Type Checking
       run: |
-        mypy zenith tests
+        mypy zenithml tests
 
     - name: Test with pytest
       run: |
