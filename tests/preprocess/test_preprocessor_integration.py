@@ -2,9 +2,9 @@ import os
 
 import nvtabular as nvt
 
-from condorml import preprocess as pp
-from condorml import tf as cm_tf
-from condorml.preprocess.constants import Backend
+from zenithml import preprocess as pp
+from zenithml import tf as cm_tf
+from zenithml.preprocess.constants import Backend
 
 
 def test_preprocessor_end2end(test_df, datasets, tmp_path):

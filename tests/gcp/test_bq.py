@@ -4,10 +4,10 @@ from unittest.mock import patch, MagicMock
 import pandas as pd
 import pytest
 
-from condorml.gcp import BQRunner
+from zenithml.gcp import BQRunner
 
 
-@patch("condorml.gcp.bq.bigquery.Client")
+@patch("zenithml.gcp.bq.bigquery.Client")
 def test_query_dry_run(mock_bq_client, caplog):
     bq = BQRunner("project")
     query = """SELECT * FROM `project.dataset.table`"""
@@ -24,8 +24,8 @@ def test_query_dry_run(mock_bq_client, caplog):
 
 
 @pytest.mark.parametrize("renew_cache", [True, False])
-@patch("condorml.gcp.bq.bigquery.QueryJobConfig")
-@patch("condorml.gcp.bq.bigquery.Client")
+@patch("zenithml.gcp.bq.bigquery.QueryJobConfig")
+@patch("zenithml.gcp.bq.bigquery.Client")
 def test_query_no_cache(mock_bq_client, mock_job_config, renew_cache):
     mock_query_job = MagicMock()
     mock_query_job.results.to_dataframe.return_value = pd.DataFrame([1, 2, 3])
@@ -45,7 +45,7 @@ def test_query_no_cache(mock_bq_client, mock_job_config, renew_cache):
     mock_bq_client().query.assert_called_once_with(formatted_query, job_config=mock_job_config())
 
 
-@patch("condorml.gcp.bq.bigquery.Client")
+@patch("zenithml.gcp.bq.bigquery.Client")
 def test_clear_cache(mock_bq_client):
     try:
         bq = BQRunner("project")
@@ -54,8 +54,8 @@ def test_clear_cache(mock_bq_client):
         pytest.fail(f"Clear Cache failed with exception {e}")
 
 
-@patch("condorml.gcp.bq.GCSFileSystem")
-@patch("condorml.gcp.bq.bigquery.Client")
+@patch("zenithml.gcp.bq.GCSFileSystem")
+@patch("zenithml.gcp.bq.bigquery.Client")
 def test_to_parquet(mock_bq_client, mock_gcsfs):
     mock_gcsfs().exists.return_value = False
     bq = BQRunner()
@@ -64,8 +64,8 @@ def test_to_parquet(mock_bq_client, mock_gcsfs):
     assert outpath == "gs://dummy/project/dataset/table/part-*.parquet"
 
 
-@patch("condorml.gcp.bq.GCSFileSystem")
-@patch("condorml.gcp.bq.bigquery.Client")
+@patch("zenithml.gcp.bq.GCSFileSystem")
+@patch("zenithml.gcp.bq.bigquery.Client")
 def test_to_parquet_exists(mock_bq_client, mock_gcsfs, caplog):
     mock_gcsfs().exists.return_value = True
     bq = BQRunner()

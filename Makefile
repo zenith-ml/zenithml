@@ -34,7 +34,7 @@ clean: FORCE
 	@rm -rf coverage.xml
 	@rm -rf .coverage*
 	@rm -rf .mypy_cache*
-	@rm -rf condorml.egg-info
+	@rm -rf zenith.egg-info
 
 docs: FORCE
 	$(MAKE) -C docs html

@@ -9,7 +9,7 @@ PROJECT_PATH = os.path.dirname(os.path.abspath(__file__))
 
 
 # Find version
-for line in open(os.path.join(PROJECT_PATH, "condorml", "__init__.py")):
+for line in open(os.path.join(PROJECT_PATH, "zenithml", "__init__.py")):
     if line.startswith("__version__ = "):
         version = line.strip().split()[2][1:-1]
 
@@ -22,11 +22,11 @@ except Exception as e:
     long_description = ""
 
 setup(
-    name="condorml",
+    name="zenithml",
     version=version,
     description="Praveen Chandar",
-    packages=find_packages(include=["condorml", "condorml.*"]),
-    url="https://github.com/condorml/condorml",
+    packages=find_packages(include=["zenithml", "zenithml.*"]),
+    url="https://github.com/zenith/zenith",
     author="Praveen Chandar",
     install_requires=[
         "cryptography~=3.1",

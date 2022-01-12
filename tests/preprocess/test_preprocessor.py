@@ -3,8 +3,8 @@ import tempfile
 
 import pandas as pd
 
-import condorml
-from condorml import preprocess as pp
+import zenithml
+from zenithml import preprocess as pp
 
 
 def test_variable_groups(test_df):
@@ -47,7 +47,7 @@ def test_save_load(test_df):
 
     preprocessor.analyze(nvt_ds=None, pandas_df=pd.DataFrame(test_df))
     analyze_data = preprocessor.analysis_data
-    path = tempfile.mkdtemp(prefix=condorml.__name__)
+    path = tempfile.mkdtemp(prefix=zenithml.__name__)
     path = str(path)
 
     preprocessor.save(path)

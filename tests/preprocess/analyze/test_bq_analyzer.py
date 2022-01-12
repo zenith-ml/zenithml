@@ -6,14 +6,14 @@ import pandas as pd
 import pytest
 import sqlparse
 
-from condorml.preprocess.analyze import (
+from zenithml.preprocess.analyze import (
     BucketizedBQAnalyzer,
     StandardScalerBQAnalyzer,
     LogScalerBQAnalyzer,
     CategoricalBQAnalyzer,
     WeightedCategoricalBQAnalyzer,
 )
-from condorml.preprocess.analyze.bq_analyzer import _generate_query_str, _generate_parquet_export
+from zenithml.preprocess.analyze.bq_analyzer import _generate_query_str, _generate_parquet_export
 
 
 def bq_analyzer_args(analyer_class):
@@ -40,7 +40,7 @@ def bq_analyzer_args(analyer_class):
         WeightedCategoricalBQAnalyzer,
     ],
 )
-@patch("condorml.preprocess.analyze.bq_analyzer.BQRunner")
+@patch("zenithml.preprocess.analyze.bq_analyzer.BQRunner")
 def test_bq_analyzer_query(mock_bq_runner, analyzer):
     analyzer = analyzer(**bq_analyzer_args(analyzer))
     qtxt = _generate_query_str([analyzer], "bq_table", where_clause=None)
@@ -57,7 +57,7 @@ def test_bq_analyzer_query(mock_bq_runner, analyzer):
         WeightedCategoricalBQAnalyzer,
     ],
 )
-@patch("condorml.preprocess.analyze.bq_analyzer.BQRunner")
+@patch("zenithml.preprocess.analyze.bq_analyzer.BQRunner")
 def test_bq_analyzer_parquet_exports(mock_bq_runner, analyzer, tmp_path):
     mock_bq_runner().query.to_parquet.return_value = pd.DataFrame([1, 2, 3])
 

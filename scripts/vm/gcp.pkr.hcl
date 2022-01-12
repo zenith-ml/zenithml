@@ -1,6 +1,6 @@
 variable "project_id" {
   type    = string
-  default = "condortools"
+  default = "zenithml"
 }
 
 variable "framework" {
@@ -14,7 +14,7 @@ variable "version" {
 
 variable "image_name" {
   type    = string
-  default = "condorml"
+  default = "zenith"
 }
 
 variable "image_zone" {
@@ -67,7 +67,7 @@ build {
     timeout      = "1200s"
     inline = [
       "sudo gcloud auth configure-docker",
-      join("", ["sudo docker pull condortools/condor-",var.framework, ":", var.version]),
+      join("", ["sudo docker pull zenithml/zenith-",var.framework, ":", var.version]),
     ]
   }
 

@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from condorml.torch import layers as pa_layers
+from zenithml.torch import layers as pa_layers
 import torch
 
 

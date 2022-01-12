@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 
-from condorml import preprocess as pp
-from condorml.preprocess.analyze import (
+from zenithml import preprocess as pp
+from zenithml.preprocess.analyze import (
     NumericalPandasAnalyzer,
     CategoricalPandasAnalyzer,
     CategoricalListPandasAnalyzer,

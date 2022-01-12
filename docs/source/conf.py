@@ -1,7 +1,7 @@
 import datetime
 import doctest
 import sphinx_rtd_theme
-import condorml
+import zenithml
 
 extensions = [
     "sphinx.ext.autodoc",
@@ -21,11 +21,11 @@ source_suffix = ".rst"
 master_doc = "index"
 
 author = "Praveen Chandar"
-project = "condorml"
+project = "zenithml"
 copyright = f"{datetime.datetime.now().year}, {author}"
 
-version = condorml.__version__
-release = condorml.__version__
+version = zenithml.__version__
+release = zenithml.__version__
 
 html_theme = "sphinx_rtd_theme"
 html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
@@ -50,7 +50,7 @@ html_theme_options = {
 html_logo = "_static/img/logo.png"
 html_static_path = ["_static"]
 html_css_files = ["css/custom.css"]
-rst_context = {"condorml": condorml}
+rst_context = {"zenithml": zenithml}
 
 add_module_names = False
 

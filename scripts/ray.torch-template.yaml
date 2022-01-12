@@ -15,8 +15,8 @@ upscaling_speed: 1.0
 # and opens all the necessary ports to support the Ray cluster.
 # Empty string means disabled.
 docker:
-    image: "condortools/condor-torch:0.0.0"
-    container_name: "condor"
+    image: "zenithml/zenithml-torch:0.0.0"
+    container_name: "zenithml"
     run_options: [
         "--gpus=all",
         "--ipc=host",
@@ -74,7 +74,7 @@ available_node_types:
                 initializeParams:
                   diskSizeGb: 50
                   # See https://cloud.google.com/compute/docs/images for more images
-                  sourceImage: projects/GCP_PROJECT/global/images/condor-torch-0-0-0
+                  sourceImage: projects/GCP_PROJECT/global/images/zenithml-torch-0-0-0
             # Make sure to set scheduling->onHostMaintenance to TERMINATE when GPUs are present
             guestAccelerators:
               - acceleratorType: nvidia-tesla-v100
@@ -113,7 +113,7 @@ available_node_types:
                 initializeParams:
                   diskSizeGb: 50
                   # See https://cloud.google.com/compute/docs/images for more images
-                  sourceImage: projects/GCP_PROJECT/global/images/condor-torch-0-0-0
+                  sourceImage: projects/GCP_PROJECT/global/images/zenithml-torch-0-0-0
             # Make sure to set scheduling->onHostMaintenance to TERMINATE when GPUs are present
             guestAccelerators:
               - acceleratorType: nvidia-tesla-v100

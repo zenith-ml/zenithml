@@ -3,7 +3,7 @@ import sqlparse
 import nvtabular as nvt
 from nvtabular.workflow import WorkflowNode
 
-from condorml.preprocess.analyze.nvt_analyzer import (
+from zenithml.preprocess.analyze.nvt_analyzer import (
     NormalizeNVTAnalyzer,
     NormalizeMinMaxNVTAnalyzer,
     CategorifyNVTAnalyzer,

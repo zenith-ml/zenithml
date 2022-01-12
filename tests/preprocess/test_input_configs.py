@@ -1,14 +1,14 @@
 import pytest
 from keras.layers import Normalization
 
-from condorml import preprocess as pp
-from condorml.preprocess.analyze import (
+from zenithml import preprocess as pp
+from zenithml.preprocess.analyze import (
     CategoricalPandasAnalyzer,
     NumericalPandasAnalyzer,
     CategoricalListPandasAnalyzer,
 )
-from condorml.preprocess.base_transformer import NumericalBaseNVTTransformer, CategoricalBaseNVTTransformer
-from condorml.tf import layers as pp_layers
+from zenithml.preprocess.base_transformer import NumericalBaseNVTTransformer, CategoricalBaseNVTTransformer
+from zenithml.tf import layers as pp_layers
 
 
 def test_numerical_input():

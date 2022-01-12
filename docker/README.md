@@ -1,4 +1,4 @@
-# Condor Base Image
+# zenith Base Image
 
 * Merlin Base Image
 * Jupyter Lab 

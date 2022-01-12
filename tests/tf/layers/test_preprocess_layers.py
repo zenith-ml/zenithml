@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 import tensorflow as tf
-from condorml.tf import layers as pa_layers
+from zenithml.tf import layers as pa_layers
 
 
 def _to_tensor(_list, is_list=False):
