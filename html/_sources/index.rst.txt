@@ -1,6 +1,6 @@
-:github_url: https://github.com/condorml/condorml
+:github_url: https://github.com/zenith/zenith
 
-CondorML Documentation
+zenith Documentation
 =======================
 
 **PyG** *(PyTorch Geometric)* is a library built upon `PyTorch <https://pytorch.org/>`_ to easily write and train Graph Neural Networks (GNNs) for a wide range of applications related to structured data.
