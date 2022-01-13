@@ -1,5 +1,5 @@
 SPHINXBUILD   = sphinx-build
-SPHINXPROJ    = zenith
+SPHINXPROJ    = zenithml
 SOURCEDIR     = source
 BUILDDIR      = build
 

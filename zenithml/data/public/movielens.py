@@ -6,8 +6,10 @@ from zenithml import preprocess as pp
 from zenithml.data import ParquetDataset
 from zenithml.data.base import BaseDatasetMixin
 from zenithml.utils import rich_logging
+from zenithml.data.registry import DatasetRegistry
 
 
+@DatasetRegistry.register("movielens")
 class Movielens(BaseDatasetMixin):
     def __init__(self, working_dir: str, data_dir: str, variant: str = "1m", **kwargs):
         assert variant.lower() in {"1m", "10m", "25m"}

@@ -41,10 +41,11 @@ jobs:
 
     - name: Build documentation
       run: |
-        cd docs && make clean && make html SPHINXOPTS="-W"  # Fail on warning.
+        cd docs && make clean && make html SPHINXOPTS="-W" && cd ..  # Fail on warning.
 
-    - name: Deploy
+    - name: Deploy Docs to Github Pages
       uses: peaceiris/actions-gh-pages@v3
+      if: ${{ github.ref == 'refs/heads/main' }}
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: docs/build
+        publish_dir: ./docs/build

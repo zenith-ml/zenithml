@@ -1,8 +1,6 @@
 from pathlib import Path
 from typing import List, Union, Optional
 
-import numpy as np
-
 from zenithml.gcp import BQRunner
 from zenithml.nvt.utils import validate_data_path
 from zenithml.preprocess import Preprocessor
@@ -36,7 +34,6 @@ class ParquetDataset:
     def base_nvt_dataset(self):
         if self._base_nvt_dataset is None:
             rich_logging().debug(f"Reading dataset from {self._dataset_path}")
-            print(self._dataset_path)
             self._base_nvt_dataset = validate_data_path(self._dataset_path)
         return self._base_nvt_dataset
 
@@ -195,14 +192,3 @@ class BQDataset(ParquetDataset):
         self.preprocessor.save(self._working_dir / "preprocessor")
 
 
-def load_dataset(
-    name: str,
-    data_dir: Optional[str] = None,
-    working_dir: Optional[str] = None,
-    features: Optional[Preprocessor] = None,
-    **kwargs,
-) -> ParquetDataset:
-    from zenithml.data import public as public_datasets
-
-    dataset_cls = public_datasets.__dict__[name.capitalize()]
-    return dataset_cls(data_dir=data_dir, working_dir=working_dir, **kwargs)
