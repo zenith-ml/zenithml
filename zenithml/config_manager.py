@@ -1,27 +1,32 @@
-import importlib
 import json
 from copy import deepcopy
-from os import path
-from typing import Optional, Dict, Any
+from pathlib import Path
+from typing import Optional, Dict, Any, Union
 
-import tensorflow as tf
 from rich import pretty
+
+from zenithml.utils import fs
 
 
 class ConfigManager:
-    """A light-weight container for all configurations to run an experiment"""
+    """A light-weight container for configs.
+    The class tries to add some convention around directory locations.
+    """
 
-    _var_dict = {}
+    _var_dict: Dict[str, Any] = {}
 
     def __init__(
         self,
         experiment_loc: str,
-        tmp_working_dir: str,
+        working_dir: str,
         experiment_group: str = "default",
         experiment_name: str = "default",
+        data_loc: Optional[str] = None,
         train_config: Optional[dict] = None,
         infer_config: Optional[dict] = None,
         eval_config: Optional[dict] = None,
+        overwrite: bool = False,
+        verbose: bool = False,
         **kwargs,
     ):
         for k, v in locals().items():
@@ -32,45 +37,66 @@ class ConfigManager:
             if var_value is not None:
                 self._var_dict[var_name] = var_value
 
-    def init_locations(self):
-        # Mkdirs
-        # tf.io.gfile.makedirs(working_dir)
-        # tf.io.gfile.makedirs(self.dask_working_dir)
-        # tf.io.gfile.makedirs(self.local_data_dir)
+        self.init_locations(overwrite, verbose)
 
-        pass
+    def init_locations(self, overwrite: bool, verbose: bool = False):
+        dirs = [self.working_dir, self.dask_working_dir, self.experiment_loc]
+        if overwrite:
+            # TODO: Implement rm
+            raise NotImplementedError
+        for d in dirs:
+            fs.mkdir(d, exist_ok=True, parents=True)
 
     @property
-    def train_config(self) -> Dict[str, Any]:
+    def train_config(self) -> Optional[Dict[str, Any]]:
         return self._var_dict.get("train_config")
 
     @property
-    def eval_config(self) -> Dict[str, Any]:
+    def eval_config(self) -> Optional[Dict[str, Any]]:
         return self._var_dict.get("eval_config")
 
     @property
-    def tmp_working_dir(self):
-        return self._var_dict["working_dir"]
+    def working_dir(self) -> Path:
+        _loc = self._var_dict["working_dir"]
+        assert fs.is_local(_loc), f"working_dir must be a local path but found {_loc}"
+        return Path(_loc)
 
     @property
-    def experiment_group(self):
+    def dask_working_dir(self) -> Union[str, Path]:
+        return fs.join(self.working_dir, "dask_working_dir")
+
+    @property
+    def experiment_group(self) -> str:
         return self._var_dict["experiment_group"]
 
     @property
-    def experiment_name(self):
+    def experiment_name(self) -> str:
         return self._var_dict["experiment_name"]
 
+    # Experiment Specific locations
     @property
-    def dask_working_dir(self):
-        return path.join(self.working_dir, "dask_working_dir")
+    def preprocessor_loc(self) -> Union[str, Path]:
+        return fs.join(self.experiment_loc, [self.experiment_group, self.experiment_name, "preprocessor"])
 
     @property
-    def model_dir(self):
-        return path.join(self.working_dir, "model_dir")
+    def transformed_data_loc(self) -> Union[str, Path]:
+        return fs.join(self.working_dir, [self.experiment_group, self.experiment_name, "transformed_data"])
 
     @property
-    def gcs_datasets_dir(self):
-        return path.join(self.gcs_bucket, "parquet_datasets", self.experiment_group)
+    def model_loc(self) -> Union[str, Path]:
+        return fs.join(self.experiment_loc, [self.experiment_group, self.experiment_name, "model"])
+
+    @property
+    def predictions_loc(self) -> Union[str, Path]:
+        return fs.join(self.experiment_loc, [self.experiment_group, self.experiment_name, "predictions"])
+
+    @property
+    def eval_loc(self) -> Union[str, Path]:
+        return fs.join(self.experiment_loc, [self.experiment_group, self.experiment_name, "eval"])
+
+    @property
+    def data_loc(self) -> Union[str, Path]:
+        return self._var_dict["data_loc"]
 
     def __getattribute__(self, item):
         _var = object.__getattribute__(self, "_var_dict").get(item)

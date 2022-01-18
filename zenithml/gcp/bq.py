@@ -46,7 +46,7 @@ class BQRunner:
         """
         self.bq_client = bigquery.Client(project=project, location=location)
         self._location = location
-        self._cache_memory = Memory(temp_dir or tempfile.gettempdir(), verbose=20)
+        self._cache_memory = Memory(temp_dir or tempfile.gettempdir())
         self._run_query_fn = self._cache_memory.cache(func=run_query, ignore=["bq_client", "dialect", "dry_run"])
 
     def query(

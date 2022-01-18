@@ -5,7 +5,7 @@ import torch
 from nvtabular import dispatch
 from torch import nn
 
-from zenithml.utils import rich_logging
+from zenithml.utils import rich_logging, fs
 
 
 def concat_layers(inputs, layers, split_str="__SPLIT__"):
@@ -59,16 +59,13 @@ class BaseTorchModel(nn.Module):
             logger.info(f"Epoch {epoch:02d}. Train loss: {loss:.4f}.")
 
         if model_dir:
-            model_dir = Path(model_dir)
-            if not model_dir.exists():
-                model_dir.mkdir(parents=True, exist_ok=True)
-
-            model_path = str(model_dir / "model.pt")
+            fs.mkdir(model_dir)
+            model_path = fs.join(model_dir, "model.pt")
             logger.info(f"Saving Model to {model_path}")
-            torch.save(model, f=model_path)
+            torch.save(model, f=fs.open_fileptr(model_path, mode="wb"))
 
     @staticmethod
     def load(model_dir: Union[str, Path]):
-        model_dir = model_dir if isinstance(model_dir, Path) else Path(model_dir)
-        model_path = str(model_dir / "model.pt")
-        return torch.load(model_path)
+        model_path = fs.join(model_dir, "model.pt")
+        assert model_path, f"{model_path} does not exist."
+        return torch.load(f=fs.open_fileptr(model_path, mode="rb"))

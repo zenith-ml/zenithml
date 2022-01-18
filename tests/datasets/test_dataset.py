@@ -1,3 +1,4 @@
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -10,13 +11,16 @@ from zenithml.preprocess import Preprocessor
 
 def test_parquet_dataset(test_df, datasets, tmp_path):
     test_df_path = str(datasets["dummy_df"])
-
-    ds = ParquetDataset(test_df_path, tmp_path)
+    transformed_data_loc = str(Path(test_df_path) / "transformed_dataset")
+    ds = ParquetDataset(
+        data_loc=test_df_path,
+        working_dir=tmp_path,
+        transformed_data_loc=transformed_data_loc,
+    )
 
     assert ds.base_nvt_dataset.num_rows == len(test_df)
     assert isinstance(ds.preprocessor, Preprocessor)
-    assert str(ds.preprocessor_dir) == str(tmp_path / "preprocessor")
-    assert str(ds.transformed_data_dir) == str(tmp_path / "transformed_dataset")
+    assert str(ds.transformed_data_loc) == transformed_data_loc
 
 
 def test_parquet_dataset_variables(datasets, tmp_path):
@@ -33,14 +37,15 @@ def test_parquet_dataset_variables(datasets, tmp_path):
 @pytest.mark.parametrize("transform", [Numerical, StandardNormalizer])
 def test_parquet_dataset_analyze(transform, test_df, datasets, tmp_path):
     test_df_path = str(datasets["dummy_df"])
+    preprocessor_loc = str(Path(tmp_path) / "preprocessor")
 
     ds = ParquetDataset(test_df_path, tmp_path)
     ds.add_outcome_variable("y")
     ds.add_variable_group("features", [transform("f_ints")])
-    ds.analyze(pandas_df=test_df)
+    ds.analyze(pandas_df=test_df, preprocessor_loc=preprocessor_loc)
 
     load_preprocessor = Preprocessor()
-    load_preprocessor.load(ds.preprocessor_dir)
+    load_preprocessor.load(preprocessor_loc)
     assert load_preprocessor.outcome_variable == "y"
     assert load_preprocessor.variable_group_keys == ["features"]
     if transform == Numerical:
@@ -52,11 +57,13 @@ def test_parquet_dataset_analyze(transform, test_df, datasets, tmp_path):
 
 def test_parquet_dataset_to_tf(test_df, datasets, tmp_path):
     test_df_path = str(datasets["dummy_df"])
+    preprocessor_loc = str(Path(tmp_path) / "preprocessor")
+    transformed_data_loc = str(Path(tmp_path) / "transformed_data")
 
-    ds = ParquetDataset(test_df_path, tmp_path)
+    ds = ParquetDataset(test_df_path, tmp_path, transformed_data_loc=transformed_data_loc)
     ds.add_outcome_variable("y")
     ds.add_variable_group("features", [Numerical("f_ints")])
-    ds.analyze_transform(pandas_df=test_df, out_files_per_proc=1)
+    ds.analyze_transform(preprocessor_loc=preprocessor_loc, pandas_df=test_df, out_files_per_proc=1)
     batch = next(ds.to_tf(batch_size=2))
     assert list(batch[0]) == ["f_ints"]
     assert len(batch[0]["f_ints"]) == 2
@@ -65,11 +72,13 @@ def test_parquet_dataset_to_tf(test_df, datasets, tmp_path):
 
 def test_parquet_dataset_to_torch(test_df, datasets, tmp_path):
     test_df_path = str(datasets["dummy_df"])
+    preprocessor_loc = str(Path(tmp_path) / "preprocessor")
+    transformed_data_loc = str(Path(tmp_path) / "transformed_data")
 
-    ds = ParquetDataset(test_df_path, tmp_path)
+    ds = ParquetDataset(test_df_path, tmp_path, transformed_data_loc=transformed_data_loc)
     ds.add_outcome_variable("y")
     ds.add_variable_group("features", [Numerical("f_ints")])
-    ds.analyze_transform(pandas_df=test_df, out_files_per_proc=1)
+    ds.analyze_transform(preprocessor_loc=preprocessor_loc, pandas_df=test_df, out_files_per_proc=1)
     batch = next(iter(ds.to_torch(batch_size=2)))
     assert list(batch[0]) == ["f_ints"]
     assert len(batch[0]["f_ints"]) == 2

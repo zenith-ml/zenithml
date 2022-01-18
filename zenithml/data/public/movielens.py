@@ -4,18 +4,18 @@ from nvtabular.utils import download_file
 
 from zenithml import preprocess as pp
 from zenithml.data import ParquetDataset
-from zenithml.data.base import BaseDatasetMixin
+from zenithml.data.base import LocalZenithBaseDataset
 from zenithml.utils import rich_logging
 from zenithml.data.registry import DatasetRegistry
 
 
 @DatasetRegistry.register("movielens")
-class Movielens(BaseDatasetMixin):
+class Movielens(LocalZenithBaseDataset):
     def __init__(self, working_dir: str, data_dir: str, variant: str = "1m", **kwargs):
         assert variant.lower() in {"1m", "10m", "25m"}
         super().__init__(
             name=f"{self.__class__.__name__}_{variant.lower()}",
-            base_data_dir=data_dir,
+            base_data_loc=data_dir,
             working_dir=working_dir,
         )
         self.variant = variant.lower()
@@ -30,35 +30,35 @@ class Movielens(BaseDatasetMixin):
         """
 
     def download(self, verbose: bool = False, **kwargs):
-        if not (self.data_dir / f"ml-{self.variant}.zip").exists():
+        if not (self.data_loc / f"ml-{self.variant}.zip").exists():
             download_file(
                 url=f"http://files.grouplens.org/datasets/movielens/ml-{self.variant}.zip",
-                local_filename=str(self.data_dir / f"ml-{self.variant}.zip"),
+                local_filename=str(self.data_loc / f"ml-{self.variant}.zip"),
                 redownload=False,
             )
             self.init_dataset(**kwargs)
         else:
             if verbose:
-                rich_logging().warn(f"Dataset already exists at {str(self.data_dir)}")
+                rich_logging().warn(f"Dataset already exists at {str(self.data_loc)}")
 
     def init_dataset(self, test_split_percentage: float = 0.2):
         df_lib = get_lib()
 
         if self.variant == "1m":
             movies = df_lib.read_csv(
-                self.data_dir / f"ml-{self.variant}/movies.dat",
+                self.data_loc / f"ml-{self.variant}/movies.dat",
                 sep="::",
                 encoding="ISO-8859-1",
                 names=["MovieID", "Title", "Genres"],
             )
             users = df_lib.read_csv(
-                self.data_dir / f"ml-{self.variant}/users.dat",
+                self.data_loc / f"ml-{self.variant}/users.dat",
                 sep="::",
                 encoding="ISO-8859-1",
                 names=["UserID", "Gender", "Age", "Occupation", "Zip-code"],
             )
             ratings = df_lib.read_csv(
-                self.data_dir / f"ml-{self.variant}/ratings.dat",
+                self.data_loc / f"ml-{self.variant}/ratings.dat",
                 sep="::",
                 encoding="ISO-8859-1",
                 names=["UserID", "MovieID", "Rating", "Timestamp"],
@@ -77,8 +77,8 @@ class Movielens(BaseDatasetMixin):
                 }
             )
         else:
-            movies = df_lib.read_csv(self.data_dir / f"ml-{self.variant}/movies.csv")
-            ratings = df_lib.read_csv(self.data_dir / f"ml-{self.variant}/ratings.csv")
+            movies = df_lib.read_csv(self.data_loc / f"ml-{self.variant}/movies.csv")
+            ratings = df_lib.read_csv(self.data_loc / f"ml-{self.variant}/ratings.csv")
 
         # shuffle the dataset
         ratings = ratings.sample(len(ratings), replace=False)
@@ -95,14 +95,14 @@ class Movielens(BaseDatasetMixin):
         workflow = nvt.Workflow(output)
 
         workflow.transform(nvt.Dataset(train_dataset)).to_parquet(
-            output_path=str(self.data_dir / "train"),
+            output_path=str(self.data_loc / "train"),
             shuffle=nvt.io.Shuffle.PER_PARTITION,
             cats=["userId", "movieId", "genres"],
             labels=["rating"],
         )
 
         workflow.transform(nvt.Dataset(test_dataset)).to_parquet(
-            output_path=str(self.data_dir / "test"),
+            output_path=str(self.data_loc / "test"),
             shuffle=nvt.io.Shuffle.PER_PARTITION,
             cats=["userId", "movieId", "genres"],
             labels=["rating"],
@@ -125,7 +125,7 @@ class Movielens(BaseDatasetMixin):
     @property
     def train(self):
         return ParquetDataset(
-            path=str(self.data_dir / "train"),
+            data_loc=str(self.data_loc / "train"),
             working_dir=self.working_dir,
             preprocessor=self.get_preprocessor(),
         )
@@ -133,7 +133,7 @@ class Movielens(BaseDatasetMixin):
     @property
     def test(self):
         return ParquetDataset(
-            path=str(self.data_dir / "test"),
+            data_loc=str(self.data_loc / "test"),
             working_dir=self.working_dir,
             preprocessor=self.get_preprocessor(),
         )

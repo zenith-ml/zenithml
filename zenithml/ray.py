@@ -1,4 +1,3 @@
-import logging
 from typing import Callable, Optional, List
 
 import ray
@@ -9,7 +8,10 @@ from zenithml.utils import rich_logging
 
 def init_ray(config_file, py_modules=None, working_dir="."):
     head_node_ip = get_head_node_ip(config_file)
-    rich_logging().info(f"Using head node: {head_node_ip}")
+    logger = rich_logging()
+    logger.info(f"Using head node: {head_node_ip}")
+    logger.info(f"Dashboard: http://{head_node_ip}:8265")
+    logger.info(f"Jupyter Notebook: http://{head_node_ip}:7777 (password:p)")
     ray.init(
         f"ray://{head_node_ip}:10001",
         runtime_env={"py_modules": py_modules, "working_dir": working_dir},
@@ -17,7 +19,7 @@ def init_ray(config_file, py_modules=None, working_dir="."):
     )
 
 
-def runner(py_modules: Optional[List] = None, working_dir=".", logging_level=logging.INFO, **ray_kwargs):
+def runner(py_modules: Optional[List] = None, working_dir=".", logging_level=None, **ray_kwargs):
     def runner_wrapper(func: Callable):
         def main(cluster_config: Optional[str] = None, detach: bool = False, *args, **kwargs):
 
@@ -28,7 +30,12 @@ def runner(py_modules: Optional[List] = None, working_dir=".", logging_level=log
             @ray.remote
             class RunnerActor:
                 def task(self):
-                    logging.basicConfig(level=logging_level)
+                    import logging
+
+                    logging.getLogger().setLevel(logging_level or logging.INFO)
+                    logging.root.setLevel(logging.INFO)
+                    logging.basicConfig(level=logging.INFO)
+                    print(logging.root.level)
                     return func(*args, **kwargs)
 
             if detach:

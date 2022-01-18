@@ -63,10 +63,14 @@ def test_bq_analyzer_parquet_exports(mock_bq_runner, analyzer, tmp_path):
 
     analyzer_obj = analyzer(export_as_parquet=True, **bq_analyzer_args(analyzer))
     data = _generate_parquet_export(
-        [analyzer_obj], "bq_table", where_clause=None, output_path=tmp_path, renew_cache=True,
+        [analyzer_obj],
+        "bq_table",
+        where_clause=None,
+        output_path=tmp_path,
+        renew_cache=True,
     )
     if analyzer in [CategoricalBQAnalyzer, WeightedCategoricalBQAnalyzer]:
 
-        assert data == {"feature_cat": str(Path(tmp_path) / "feature_cat.vocab")}
+        assert data == {"feature_cat": Path(tmp_path) / "feature_cat.vocab"}
     else:
         assert data == {}

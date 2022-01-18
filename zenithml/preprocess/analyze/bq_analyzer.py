@@ -5,14 +5,15 @@ from pathlib import Path
 from typing import List, Optional, Dict, Union
 
 from zenithml.gcp import BQRunner
+from zenithml.utils import fs
 
 
 def _generate_parquet_export(all_analyzers, bq_table, where_clause, output_path, renew_cache):
     analyze_data = {}
     for pp in all_analyzers:
         if pp.export_as_parquet:
+            fs.mkdir(output_path)
             data = pp.export_to_parquet(bq_table, where_clause, output_path, renew_cache)
-            output_path.mkdir(exist_ok=True, parents=True)
             analyze_data.update(data)
     return analyze_data
 
@@ -52,7 +53,6 @@ class BQAnalyzer(abc.ABC):
         output_path: Optional[Union[str, Path]] = None,
     ):
         assert output_path is not None, "output_path must be set (check bq_analyzer_out_path) in fit()"
-        output_path = output_path if isinstance(output_path, Path) else Path(output_path)
         bq_runner = BQRunner()
 
         # Construct a query using the analyzer and get the analyze data from BQ
@@ -154,8 +154,8 @@ class CategoricalBQAnalyzer(BQAnalyzer):
         query = f"""WITH {self.analyze_subquery(base_table, where_clause)}
         SELECT {self.feature} AS {self.feature}_cat  FROM {self.feature}_cat_subq"""
 
-        vocab_path = os.path.join(output_path, f"{self.feature}_cat.vocab")
-        if not os.path.exists(vocab_path) or renew_cache:
+        vocab_path = fs.join(output_path, f"{self.feature}_cat.vocab")
+        if not fs.exists(vocab_path) or renew_cache:
             self.bq_runner.query(query, renew_cache=renew_cache).to_parquet(vocab_path)
 
         return {f"{self.feature}_cat": vocab_path}
@@ -192,8 +192,8 @@ class WeightedCategoricalBQAnalyzer(BQAnalyzer):
         query = f"""WITH {self.analyze_subquery(base_table, where_clause)}
         SELECT {self.feature} AS {self.feature}_cat_subq  FROM {self.feature}_cat_subq"""
 
-        vocab_path = os.path.join(output_path, f"{self.feature}_cat.vocab")
-        if not os.path.exists(vocab_path) or renew_cache:
+        vocab_path = fs.join(output_path, f"{self.feature}_cat.vocab")
+        if not fs.exists(vocab_path) or renew_cache:
             self.bq_runner.query(query, renew_cache=renew_cache).to_parquet(vocab_path)
 
         return {f"{self.feature}_cat": vocab_path}

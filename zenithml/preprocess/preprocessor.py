@@ -8,12 +8,13 @@ from cloudpickle import pickle
 
 from zenithml.nvt.workflow import CustomNVTWorkflow
 from zenithml.preprocess.analyze import BQAnalyzer, NVTAnalyzer
-from zenithml.preprocess.base_transformer import BaseNVTTransformer
 from zenithml.preprocess.analyze import PandasAnalyzer
+from zenithml.preprocess.base_transformer import BaseNVTTransformer
 from zenithml.preprocess.constants import Backend
 from zenithml.preprocess.constants import NVTColType
 from zenithml.preprocess.constants import _OUTCOME_VAR
 from zenithml.preprocess.ftransform_configs.ftransform_config import FTransformConfig
+from zenithml.utils import fs
 
 
 class Preprocessor:
@@ -186,20 +187,19 @@ class Preprocessor:
         Args:
             path (str): Path to a local directory to store the preprocess assets.
         """
-        base_path = Path(path) if isinstance(path, str) else path
-        base_path.mkdir(parents=True, exist_ok=True)
-
+        fs.mkdir(path)
         data = self.analysis_data, self.get_nvt_cols(), self._var_dict, self._var_group_dict
 
         if self.nvt_workflow:
-            nvt_workflow_path = base_path / "nvt_workflow"
+            nvt_workflow_path = fs.join(path, "nvt_workflow")
             self.nvt_workflow.save(str(nvt_workflow_path))
             persist_obj = data, str(nvt_workflow_path)
         else:
             persist_obj = data, ""
 
-        with open(base_path / "preprocess", "wb") as _file_prt:
-            pickle.dump(persist_obj, _file_prt)
+        _file_prt = fs.open_fileptr(fs.join(path, "preprocessor.pkl"), mode="wb")
+        pickle.dump(persist_obj, _file_prt)
+        fs.close_fileptr(_file_prt)
 
     def load(self, path: Union[str, Path]):
         """
@@ -207,11 +207,12 @@ class Preprocessor:
         Args:
             path (str): Path to a local directory containing preprocess assets.
         """
-        base_path = Path(path) if isinstance(path, str) else path
-        _path = base_path / "preprocess"
+        base_path = fs.join(path, "preprocessor.pkl")
+        assert fs.exists(base_path), f"{base_path} does not exist"
 
-        with open(_path, "rb") as _file_prt:
-            _data, nvt_workflow_path = pickle.load(_file_prt)
+        _file_prt = fs.open_fileptr(base_path, mode="rb")
+        _data, nvt_workflow_path = pickle.load(_file_prt)
+        fs.close_fileptr(_file_prt)
 
         self.analysis_data, nvt_cols, self._var_dict, self._var_group_dict = _data
         for group_name, vals in self._var_group_dict.items():
