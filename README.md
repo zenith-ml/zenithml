@@ -5,9 +5,11 @@
 [![PyPI version](https://badge.fury.io/py/zenith.svg)](https://badge.fury.io/py/zenithml)
 
 # Zenith ML
-Zenith ML provides a feature processors, data loaders,
+Zenith ML is provides an end-to-end framework for
+developing machine learning models. 
+It provides feature processors, data loaders,
 ML models for recommendations and search applications, 
-and evaluation tools for rapid experimentation at scale.
+and evaluation methodologies for rapid experimentation at scale.
 Zenith ML is framework-agnostic and current has built-in
 support for PyTorch and Keras/Tensorflow. 
 
