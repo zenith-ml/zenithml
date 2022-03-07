@@ -17,7 +17,7 @@ class CustomNVTWorkflow(Workflow):
 
         return Dataset(
             _transform_ddf(ddf, self.output_node, self.output_dtypes, additional_cols),
-            client=self.client,
+            client="auto",
             cpu=dataset.cpu,
             base_dataset=dataset.base_dataset,
             schema=self.output_schema,

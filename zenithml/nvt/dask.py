@@ -1,7 +1,7 @@
 import logging
 
 from dask.distributed import Client
-from nvtabular.utils import _pynvml_mem_size, device_mem_size
+from merlin.core.utils import pynvml_mem_size, device_mem_size
 
 
 def init_cluster(
@@ -44,7 +44,7 @@ def init_cluster(
 
     # Check if any device memory is already occupied
     for dev in visible_devices.split(","):
-        fmem = _pynvml_mem_size(kind="free", index=int(dev))
+        fmem = pynvml_mem_size(kind="free", index=int(dev))
         used = (device_size - fmem) / 1e9
         if used > 1.0:
             logging.warn(f"BEWARE - {used} GB is already occupied on device {int(dev)}!")

@@ -39,7 +39,7 @@ setup(
         "rich>=10.13.0",
         "scikit-learn>=1.0.1",
         "sqlparse>=0.4.2",
-        "nvtabular @ git+git://github.com/NVIDIA-Merlin/NVTabular.git@dc9c04d126b8ad842a32a3618e8f4495afbe0678",
+        "nvtabular @ git+git://github.com/NVIDIA-Merlin/NVTabular.git@v0.11.0",
     ],
     extras_require={
         "docs": [
