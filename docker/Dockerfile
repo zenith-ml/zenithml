@@ -3,16 +3,13 @@ ARG BASE_VER=21.11
 ARG BASE_IMAGE=nvcr.io/nvidia/merlin/merlin-tensorflow-training
 FROM $BASE_IMAGE:$BASE_VER
 SHELL ["/bin/bash", "-c"]
+ENV NVTAB_VER=v0.11.0
 ENV CUDNN=8.1.0.77-1
 ENV CUDA=11.2
 ENV HOME /home
 ENV NVIDIA_VISIBLE_DEVICES all
 ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
-ENV PYTHONPATH "${PYTHONPATH}:$HOME/ml:$HOME/ml/src:$HOME/ml/src:$HOME/ml/lib"
-
-RUN rm -rf /nvtabular && git clone https://github.com/NVIDIA-Merlin/NVTabular.git /nvtabular/ && \
-    cd /nvtabular/; if [ "$RELEASE" == "true" ] && [ ${NVTAB_VER} != "vnightly" ] ; then git fetch --all --tags && git checkout tags/${NVTAB_VER}; else git checkout main; fi; \
-    python setup.py develop --user;
+ENV PYTHONPATH "${PYTHONPATH}:/nvtabular:$HOME/ml:$HOME/ml/src:$HOME/ml/src:$HOME/ml/lib"
 
 RUN bash -c "$(wget https://raw.githubusercontent.com/ohmybash/oh-my-bash/master/tools/install.sh -O -)"
 RUN wget -nv \
@@ -28,6 +25,7 @@ RUN wget -nv \
     # Remove the backup directory that gcloud creates
     rm -rf /root/tools/google-cloud-sdk/.install/.backup  && \
     echo '[GoogleCompute]\nservice_account = default' > /etc/boto.cfg
+
 RUN pip install jupyterlab_nvdashboard dask-labextension
 
 WORKDIR $HOME
@@ -39,6 +37,8 @@ WORKDIR $HOME/ml
 ADD . $HOME/ml
 RUN pip install .
 RUN if [[ "$BASE_IMAGE" == *"tensorflow"* ]] ; then pip install .[tf]; else pip install .[torch]; fi
+# Clean up
+RUN pip install numba==0.53.1 numpy==1.22.2 --no-deps
 
 #EXPOSE 8000-8999
 ENTRYPOINT ["/run_jupyter.sh"]

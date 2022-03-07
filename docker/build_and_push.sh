@@ -1,9 +1,9 @@
 #!/bin/bash
 set -e
-# bash build_and_push.sh torch 0.0.0
-# bash build_and_push.sh tf 0.0.0
+# bash ./docker/build_and_push.sh torch 0.0.0
+# bash ./docker/build_and_push.sh tf 0.0.0
 FRAMEWORK=$1
-BASEIMAGE_VER=21.12
+BASEIMAGE_VER=22.03
 VER=$2
 if [ "$FRAMEWORK" == "tf" ]
 then
