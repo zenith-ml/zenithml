@@ -13,7 +13,10 @@ from zenithml.preprocess.constants import NVTColType
 
 
 def _cast_col(col, gdf):
-    return col.astype(np.float32, copy=False)
+    if col.dtype==bool:
+        return col.astype(np.float32, copy=False)
+    else:
+        return col
 
 
 def _merge_nvt_ops(nvt_ops):
@@ -76,7 +79,7 @@ class NumericalBaseNVTTransformer(BaseNVTTransformer):
         if self.kwargs.get("is_list", False):
             op = [self.input_col] >> FillMissing(fill_val=self.default_value)
         else:
-            op = [self.input_col] >> FillMissing(fill_val=self.default_value)
+            op = [self.input_col] >> FillMissing(fill_val=self.default_value) >> LambdaOp(_cast_col)
         return op
 
 
