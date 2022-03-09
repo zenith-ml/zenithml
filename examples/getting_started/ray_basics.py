@@ -6,7 +6,7 @@ from collections import Counter
 logging.getLogger().setLevel(logging.DEBUG)
 import ray
 
-ray.init("ray://10.176.0.39:10001")
+ray.init("ray://127.0.0.1:10001")
 
 
 @ray.remote

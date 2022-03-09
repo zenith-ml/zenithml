@@ -80,7 +80,7 @@ class ConfigManager:
 
     @property
     def transformed_data_loc(self) -> Union[str, Path]:
-        return fs.join(self.working_dir, [self.experiment_group, self.experiment_name, "transformed_data"])
+        return fs.join(self.experiment_loc, [self.experiment_group, self.experiment_name, "transformed_data"])
 
     @property
     def model_loc(self) -> Union[str, Path]:

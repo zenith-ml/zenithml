@@ -76,7 +76,7 @@ class NumericalBaseNVTTransformer(BaseNVTTransformer):
         if self.kwargs.get("is_list", False):
             op = [self.input_col] >> FillMissing(fill_val=self.default_value)
         else:
-            op = [self.input_col] >> FillMissing(fill_val=self.default_value) >> LambdaOp(_cast_col)
+            op = [self.input_col] >> FillMissing(fill_val=self.default_value)
         return op
 
 
