@@ -187,7 +187,7 @@ class NVTKerasDataset(KerasSequenceLoader):
                             print(off0, off1)
                             raise ValueError
 
-                        value = values[start:stop]
+                        value = values[int(start) : int(stop)]
                         index = off0 - start if not use_nnz else nnz
                         batch_lists[column_name] = (value, index)
                     c = (c, batch_lists)
@@ -214,14 +214,4 @@ class NVTKerasDataset(KerasSequenceLoader):
 
     def _handle_tensors(self, side_df, cats, conts, labels):
         to_return = super()._handle_tensors(cats, conts, labels)
-
-        def list_col_as_sparse(k, v):
-            if isinstance(v, tuple) or isinstance(v, list):
-                values = v[0][:, 0]
-                row_lengths = v[1][:, 0]
-                return tf.RaggedTensor.from_row_lengths(values, row_lengths, name=f"{k}_ragged").to_sparse()
-            return v
-
-        # to_return = {k: list_col_as_sparse(k, v) for k, v in to_return[0].items()}, to_return[1]
-
         return (*to_return, side_df) if side_df is not None else to_return
