@@ -138,11 +138,11 @@ class Preprocessor:
         else:
             for group_name, group_input_values in self._var_group_dict.items():
                 if pandas_df is not None:
-                    logging.info("data is pandas DataFrame. Using AnalyzerType.PandasAnalyzer")
+                    logging.debug("data is pandas DataFrame. Using AnalyzerType.PandasAnalyzer")
                     self.analysis_data[group_name] = PandasAnalyzer.fit(group_input_values, df=pandas_df)
 
                 elif bq_table is not None:
-                    logging.info("data is str. Using AnalyzerType.BQAnalyzer")
+                    logging.debug("data is str. Using AnalyzerType.BQAnalyzer")
                     self.analysis_data[group_name], _ = BQAnalyzer.fit(
                         group_input_values,
                         bq_table=bq_table,
