@@ -100,7 +100,9 @@ class ConfigManager:
 
     def __getattribute__(self, item):
         _var = object.__getattribute__(self, "_var_dict").get(item)
-        return _var or object.__getattribute__(self, item)
+        if _var is not None:
+            return _var
+        return object.__getattribute__(self, item)
 
     def add_config(self, name, value):
         self._var_dict[name] = value
