@@ -4,8 +4,6 @@ ARG BASE_IMAGE=nvcr.io/nvidia/merlin/merlin-tensorflow-training
 FROM $BASE_IMAGE:$BASE_VER
 SHELL ["/bin/bash", "-c"]
 ENV NVTAB_VER=v0.11.0
-ENV CUDNN=8.1.0.77-1
-ENV CUDA=11.2
 ENV HOME /home
 ENV NVIDIA_VISIBLE_DEVICES all
 ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
@@ -36,7 +34,7 @@ RUN chmod +x /run_jupyter.sh
 WORKDIR $HOME/ml
 ADD . $HOME/ml
 RUN pip install .
-RUN if [[ "$BASE_IMAGE" == *"tensorflow"* ]] ; then pip install .[tf]; else pip install .[torch]; fi
+#RUN if [[ "$BASE_IMAGE" == *"tensorflow"* ]] ; then pip install .[tf]; else pip install .[torch]; fi
 # Clean up
 RUN pip install numba==0.53.1 numpy==1.22.2 --no-deps
 
