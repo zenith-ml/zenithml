@@ -16,6 +16,7 @@ def create_mini_test_df(path=None):
             "f2_ints": [1, 1, 2, 2, 1],
             "f2_buk": [100, 100, 200, 200, 300],
             "f2_cat": [["A"], ["B", "C"], [], ["A"], ["B"]],
+            "f2_cat_weight": [[101.0], [102.0, 3.0], [], [1011.0], [1012.0]],
             "f2_float": [0.1, 0.1, 0.2, 0.2, 0.1],
             "y": list(np.random.rand(5)),
             "ids": [f"id_{i}" for i in list(np.arange(5))],

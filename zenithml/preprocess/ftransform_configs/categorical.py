@@ -13,14 +13,14 @@ from zenithml.preprocess.analyze import (
     CategoricalListPandasAnalyzer,
     NumericalPandasAnalyzer,
 )
+from zenithml.preprocess.analyze.nvt_analyzer import CategorifyNVTAnalyzer
 from zenithml.preprocess.base_transformer import (
     NVTColType,
     BaseNVTTransformer,
     CategoricalBaseNVTTransformer,
-    BucketizeBaseNVTTransformer,
+    BucketizeBaseNVTTransformer, NumericalBaseNVTTransformer,
 )
 from zenithml.preprocess.ftransform_configs.ftransform_config import FTransformConfig
-from zenithml.preprocess.analyze.nvt_analyzer import CategorifyNVTAnalyzer
 
 
 class Categorical(FTransformConfig):
@@ -141,6 +141,91 @@ class CategoricalList(Categorical):
             vocab=self.analyze_data.get("vocab"),
             seq_length=self.seq_length,
         )
+
+
+class WeightedCategoricalList(CategoricalList):
+    def __init__(
+        self,
+        input_col: str,
+        weight_col: str,
+        num_buckets: Optional[int] = None,
+        top_k: int = 100000,
+        vocab: Optional[List[str]] = None,
+        dtype=None,
+        weights=None,
+        export_as_parquet: bool = False,
+    ):
+
+        super().__init__(
+            [input_col, weight_col],
+            dimension=1,
+            num_buckets=num_buckets,
+            top_k=top_k,
+            vocab=vocab,
+            dtype=dtype,
+            weights=weights,
+            export_as_parquet=export_as_parquet,
+            seq_length=1,
+        )
+        self.cat_col = input_col
+        self.weight_col = weight_col
+
+    @property
+    def name(self):
+        return f"{self.input_col}_weight_{self.weight_col}"
+
+    def nvt_analyzer(self, dask_working_dir=None, **kwargs) -> Optional[NVTAnalyzer]:
+        return CategorifyNVTAnalyzer(input_col=self.cat_col, feature=self.name, default_value=self.default_value)
+
+    def pandas_analyzer(self, **kwargs) -> PandasAnalyzer:
+        return CategoricalListPandasAnalyzer(
+            input_col=self.cat_col,
+            default_value=self.default_value,
+            feature=self.name,
+            top_k=self.top_k,
+        )
+
+    def bq_analyzer(self) -> Optional[BQAnalyzer]:
+        return WeightedCategoricalBQAnalyzer(
+            input_col=self.cat_col,
+            feature=self.name,
+            top_k=self.top_k,
+            export_as_parquet=self.export_as_parquet,
+        )
+
+    def base_transformer(self) -> List[BaseNVTTransformer]:
+        return [
+            CategoricalBaseNVTTransformer(
+                input_col=self.cat_col,
+                col_type=NVTColType.CAT,
+                default_value=self.default_value,
+                vocab=self.analyze_data.get("vocab"),
+            ),
+            NumericalBaseNVTTransformer(
+                input_col=self.weight_col,
+                col_type=NVTColType.CONT,
+                default_value=0.0,
+                is_list=True,
+            ),
+        ]
+
+    def tf_preprocess_layer(self):
+        from zenithml.tf.layers.preprocess.weighted_nhotencoder import WeightedNHotEncodingLayer
+
+        num_buckets = self.get_num_buckets()
+        if self.dimension == 1:
+            return WeightedNHotEncodingLayer(input_col=self.name, weight_col=self.weight_col, num_buckets=num_buckets)
+        else:
+            raise Exception("dimension must be None or 1 for WeightedCategoricalList")
+
+    def torch_preprocess_layer(self):
+        from zenithml.torch.layers.preprocess.weighted_nhotencoder import WeightedNHotEncodingLayer
+
+        num_buckets = self.get_num_buckets()
+        if self.dimension == 1:
+            return WeightedNHotEncodingLayer(num_buckets=num_buckets)
+        else:
+            raise Exception("dimension must be None or 1 for WeightedCategoricalList")
 
 
 class Bucketized(Categorical):
