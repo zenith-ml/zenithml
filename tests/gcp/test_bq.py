@@ -59,9 +59,9 @@ def test_clear_cache(mock_bq_client):
 def test_to_parquet(mock_bq_client, mock_gcsfs):
     mock_gcsfs().exists.return_value = False
     bq = BQRunner()
-    outpath = bq.to_parquet("project.dataset.table", "gs://dummy")
+    outpath = bq.to_parquet("project.dataset.table", "gs://dummy", )
     mock_bq_client().extract_table.assert_called_once()
-    assert outpath == "gs://dummy/project/dataset/table/part-*.parquet"
+    assert outpath == "gs://dummy/part-*.parquet"
 
 
 @patch("zenithml.gcp.bq.GCSFileSystem")
@@ -73,5 +73,5 @@ def test_to_parquet_exists(mock_bq_client, mock_gcsfs, caplog):
     with caplog.at_level(logging.INFO):
         outpath = bq.to_parquet("project.dataset.table", "gs://dummy")
         mock_bq_client().extract_table.assert_not_called()
-    assert outpath == "gs://dummy/project/dataset/table/part-*.parquet"
+    assert outpath == "gs://dummy/part-*.parquet"
     assert "Destination GCS Path already exist, skipping big query export!" in caplog.text

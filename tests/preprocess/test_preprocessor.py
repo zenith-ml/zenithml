@@ -19,7 +19,7 @@ def test_variable_groups(test_df):
         ],
     )
 
-    preprocessor.analyze(nvt_ds=None, pandas_df=pd.DataFrame(test_df))
+    preprocessor.analyze(nvt_ds=None, pandas_df=pd.DataFrame(test_df), dask_working_dir=tempfile.gettempdir())
     assert {"features_f_cat", "features_f_float", "features_f_ints"} == set(
         [i.name for i in preprocessor.get_variable_group("features")]
     )
@@ -45,7 +45,7 @@ def test_save_load(test_df):
     )
     preprocessor.add_variable("treatment", "t")
 
-    preprocessor.analyze(nvt_ds=None, pandas_df=pd.DataFrame(test_df))
+    preprocessor.analyze(nvt_ds=None, pandas_df=pd.DataFrame(test_df), dask_working_dir=tempfile.gettempdir())
     analyze_data = preprocessor.analysis_data
     path = tempfile.mkdtemp(prefix=zenithml.__name__)
     path = str(path)

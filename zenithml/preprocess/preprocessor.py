@@ -118,7 +118,7 @@ class Preprocessor:
 
     def analyze(
         self,
-        nvt_ds: nvt.Dataset,
+        nvt_ds: Optional[nvt.Dataset] = None,
         bq_table: Optional[str] = None,
         pandas_df: Optional[pd.DataFrame] = None,
         where_clause: Optional[str] = None,
@@ -152,14 +152,13 @@ class Preprocessor:
                     )
 
         # This check is mostly to make testing easier but in practice nvt_ds must always be set.
-        if nvt_ds:
-            self.nvt_workflow = BaseNVTTransformer.fit(
-                nvt_ds=nvt_ds,
-                input_group_dict=self._var_group_dict,
-                var_dict=self._var_dict,
-                client=client,
-                dask_working_dir=dask_working_dir,
-            )
+        self.nvt_workflow = BaseNVTTransformer.fit(
+            nvt_ds=nvt_ds,
+            input_group_dict=self._var_group_dict,
+            var_dict=self._var_dict,
+            client=client,
+            dask_working_dir=dask_working_dir,
+        )
 
     def transform(self, data=None, output_data_path=None, out_files_per_proc=20, additional_cols=None, **kwargs):
         """

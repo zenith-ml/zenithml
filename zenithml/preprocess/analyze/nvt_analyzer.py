@@ -28,7 +28,8 @@ class NVTAnalyzer(abc.ABC):
         analyze_data = {}
         for group_name, vals in input_group_dict.items():
             for _feature in vals:
-                ops.append(_feature.nvt_analyzer().ops(dask_working_dir=dask_working_dir))
+                if _feature.nvt_analyzer() is not None:
+                    ops.append(_feature.nvt_analyzer().ops(dask_working_dir=dask_working_dir))
 
         nvt_ops = _merge_nvt_ops(ops)
         nvt_workflow = nvt.Workflow(nvt_ops, client=client)
@@ -38,7 +39,8 @@ class NVTAnalyzer(abc.ABC):
         for parent_node in nvt_workflow.output_node.parents_with_dependencies:
             for group_name, vals in input_group_dict.items():
                 for _feature in vals:
-                    analyze_data.update(_feature.nvt_analyzer().get_data(parent_node.op))
+                    if _feature.nvt_analyzer() is not None:
+                        analyze_data.update(_feature.nvt_analyzer().get_data(parent_node.op))
 
         for group_name, vals in input_group_dict.items():
             for _feature in vals:

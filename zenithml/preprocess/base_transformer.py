@@ -61,7 +61,8 @@ class BaseNVTTransformer(abc.ABC):
         nvt_ops = _merge_nvt_ops(ops) + outcome_var
 
         nvt_workflow = CustomNVTWorkflow(nvt_ops, client=client)
-        nvt_workflow.fit(nvt_ds)
+        if nvt_ds is not None:
+            nvt_workflow.fit(nvt_ds)
         return nvt_workflow
 
     @staticmethod
