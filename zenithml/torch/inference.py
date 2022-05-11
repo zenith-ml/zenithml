@@ -21,12 +21,14 @@ class BatchInference(object):
         worker_id,
         side_cols=None,
         map_fn=None,
+        batch_size=10000,
     ):
         self.model = BaseTorchModel.load(model_dir)
         self.preprocessor_loc = preprocessor_loc
         self.working_dir = working_dir
         self.predictions_loc = predictions_loc
         self.side_cols = side_cols
+        self.batch_size = batch_size
         self.map_fn = map_fn
         self.idx = 0
         self.worker_id = worker_id
@@ -36,23 +38,55 @@ class BatchInference(object):
         import cupy as cp
 
         @delayed
-        def predict_wrapper(_model, x, side_df=None):
+        def predict_wrapper(_model, x, y, side_df=None, outcome_var=None):
             df = side_df.copy()
+            if outcome_var not in df.columns:
+                df[outcome_var] = cp.fromDlpack(torch.utils.dlpack.to_dlpack(y))
             df["score"] = cp.fromDlpack(torch.utils.dlpack.to_dlpack(_model(x)))
             return df
 
         ds = ParquetDataset(data_loc=filename, working_dir=self.working_dir)
         ds.load_preprocessor(self.preprocessor_loc)
-        ds = ds.to_torch(batch_size=10000, transform_data=True, side_cols=self.side_cols, map_fn=self.map_fn)
-        if self.side_cols:
-            dd_res = dd.from_delayed([predict_wrapper(self.model, x, df) for x, y, df in ds])  # type: ignore
-        else:
+        if self.side_cols is not None:
+            outcome_variable = ds.preprocessor.outcome_variable
+            side_cols = [col for col in self.side_cols if col != outcome_variable]
+            dataloader = ds.to_torch(
+                batch_size=self.batch_size,
+                transform_data=True,
+                side_cols=side_cols,
+                map_fn=self.map_fn,
+            )
+
             dd_res = dd.from_delayed(
                 [
                     predict_wrapper(
-                        self.model, x, cudf.DataFrame(data={"y": cp.fromDlpack(torch.utils.dlpack.to_dlpack(y))})
+                        self.model,
+                        x,
+                        y,
+                        df,
+                        outcome_variable,
                     )
-                    for x, y in ds  # type: ignore
+                    for x, y, df in dataloader
+                ]
+            )
+        else:
+            dataloader = ds.to_torch(
+                batch_size=self.batch_size,
+                transform_data=True,
+                side_cols=self.side_cols,
+                map_fn=self.map_fn,
+            )
+            dd_res = dd.from_delayed(
+                [
+                    predict_wrapper(
+                        self.model,
+                        x,
+                        y,
+                        cudf.DataFrame(
+                            data={ds.preprocessor.outcome_variable: cp.fromDlpack(torch.utils.dlpack.to_dlpack(y))}
+                        ),
+                    )
+                    for x, y in dataloader  # type: ignore
                 ]
             )
         self.idx += 1
