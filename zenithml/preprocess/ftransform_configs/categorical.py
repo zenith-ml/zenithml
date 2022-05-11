@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Union
 
 import pandas as pd
 
@@ -26,7 +26,7 @@ from zenithml.preprocess.ftransform_configs.ftransform_config import FTransformC
 class Categorical(FTransformConfig):
     def __init__(
         self,
-        input_col: str,
+        input_col: Union[str, List[str]],
         dimension: int = 1,
         num_buckets: Optional[int] = None,
         top_k: int = 100000,
@@ -54,7 +54,7 @@ class Categorical(FTransformConfig):
             input_col=self.input_col, default_value=self.default_value, feature=self.name, top_k=self.top_k
         )
 
-    def base_transformer(self) -> BaseNVTTransformer:
+    def base_transformer(self) -> Union[List[BaseNVTTransformer], BaseNVTTransformer]:
         return CategoricalBaseNVTTransformer(
             input_col=self.input_col,
             col_type=NVTColType.CAT,
@@ -133,7 +133,7 @@ class CategoricalList(Categorical):
             export_as_parquet=self.export_as_parquet,
         )
 
-    def base_transformer(self) -> BaseNVTTransformer:
+    def base_transformer(self) -> Union[List[BaseNVTTransformer], BaseNVTTransformer]:
         return CategoricalBaseNVTTransformer(
             input_col=self.input_col,
             col_type=NVTColType.SPARSE_AS_DENSE if self.seq_length > 1 else NVTColType.CAT,
