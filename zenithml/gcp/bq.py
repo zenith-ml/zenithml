@@ -94,7 +94,7 @@ class BQRunner:
 
         self._cache_memory.clear(warn=False)
 
-    def to_parquet(self, source_bq: str, destination_gcs: str):
+    def to_parquet(self, source_bq: str, destination_gcs: str, overwrite: bool = False):
         """
         Exports BigQuery table to Google Cloud Storage.
         Args:
@@ -104,14 +104,17 @@ class BQRunner:
 
         """
         assert len(source_bq.split(".")) == 3, "invalid source_bq format"
-        project, dataset_id, table_id = source_bq.split(".")
-        destination_gcs = os.path.join(destination_gcs, project, dataset_id, table_id)
         out_path = os.path.join(destination_gcs, "part-*.parquet")
 
         fs = GCSFileSystem()
         if fs.exists(destination_gcs):
-            rich_logging().info("Destination GCS Path already exist, skipping big query export!")
-            return out_path
+            if overwrite:
+                # Delete folder
+                rich_logging().info(f"Deleting existing destination GCS Path {destination_gcs}.")
+                fs.delete(destination_gcs, recursive=True)
+            else:
+                rich_logging().info("Destination GCS Path already exist, skipping big query export!")
+                return out_path
 
         project, dataset_id, table_id = source_bq.split(".")
         dataset_ref = bigquery.DatasetReference(project, dataset_id)
@@ -126,3 +129,23 @@ class BQRunner:
         ).result()
 
         return out_path
+
+    def from_parquet(self, table_id: str, data_loc: str, quite: bool = False, schema: Optional[list] = None):
+        parquet_options = bigquery.format_options.ParquetOptions()
+        parquet_options.enable_list_inference = True
+
+        client = self.bq_client
+        job_config = bigquery.LoadJobConfig(
+            source_format=bigquery.SourceFormat.PARQUET,
+            autodetect=True,
+            parquet_options=parquet_options,
+        )
+        if schema is not None:
+            job_config.schema = schema
+
+        load_job = client.load_table_from_uri(data_loc, table_id, job_config=job_config)  # Make an API request.
+        load_job.result()  # Waits for the job to complete.
+        destination_table = client.get_table(table_id)
+
+        if not quite:
+            rich_logging().info("Loaded {} rows.".format(destination_table.num_rows))
