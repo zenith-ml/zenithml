@@ -3,7 +3,7 @@ set -e
 # bash ./docker/build_and_push.sh torch 0.0.0
 # bash ./docker/build_and_push.sh tf 0.0.0
 FRAMEWORK=$1
-BASEIMAGE_VER=22.03
+BASEIMAGE_VER=22.04
 VER=$2
 if [ "$FRAMEWORK" == "tf" ]
 then
